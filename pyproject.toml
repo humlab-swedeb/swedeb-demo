@@ -7,10 +7,14 @@ readme = "README.md"
 packages = [{include = "swedeb_demo"}]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "3.11"
 streamlit = "^1.20.0"
 pandas = "^1.5.3"
 plotly = "^5.16.1"
+bokeh = "^3.2.2"
+humlab-penelope = "^0.7.37"
+python-dotenv = "^1.0.0"
+click = "^8.1.7"
 
 
 [tool.poetry.group.dev.dependencies]
