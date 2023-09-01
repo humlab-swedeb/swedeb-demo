@@ -1,0 +1,120 @@
+import math
+from typing import Any
+
+import pandas as pd
+import streamlit as st
+
+
+class TableDisplay:
+    def __init__(
+        self,
+        hits_per_page: int,
+        current_container_key: str,
+        current_page_name: str,
+        party_abbrev_to_color: dict,
+    ) -> None:
+        self.hits_per_page = hits_per_page
+        self.type = type
+        self.current_container = current_container_key
+        self.current_page_name = current_page_name
+
+        dummy_pdf = "https://www.riksdagen.se"
+        self.link = f"[protokoll]({dummy_pdf})"
+        self.party_colors = party_abbrev_to_color
+
+    def show_table(self, data: pd.DataFrame, type: str = "table") -> None:
+        current_page = st.session_state[self.current_page_name]
+        max_pages = math.ceil(len(data) / self.hits_per_page) - 1
+        if current_page > max_pages:
+            st.session_state[self.current_page_name] = 0
+            current_page = 0
+        current_df = data.iloc[
+            current_page
+            * self.hits_per_page : ((current_page + 1) * self.hits_per_page)
+        ]
+
+        if type == "table":
+            self.display_partial_table(current_df)
+        else:
+            self.display_partial_source(current_df)
+
+        self.add_buttons(current_page, max_pages)
+
+    def add_buttons(self, current_page: int, max_pages: int) -> None:
+        button_col_v, _, info_col, _, button_col_h = st.columns([1, 1, 1, 1, 1])
+
+        if current_page > 0:
+            button_col_v.button(
+                "Föregående",
+                key=f"{self.current_container}_F",
+                on_click=self.decrease_page,
+            )
+        if current_page < max_pages:
+            button_col_h.button(
+                "Nästa", key=f"{self.current_container}_B", on_click=self.increase_page
+            )
+        info_col.caption(f"Sida {current_page + 1} av {max_pages + 1}")
+
+    def display_partial_table(self, current_df: pd.DataFrame) -> None:
+        st.write(current_df)
+
+    def display_partial_source(self, current_df: pd.DataFrame) -> None:
+        self.write_header()
+        for _, row in current_df.iterrows():
+            self.write_row(row)
+
+    def get_party_with_color(self, party: str) -> str:
+        if party in self.party_colors:
+            color = self.party_colors[party]
+            return f'<p style="color:{color}";>{party}</p>'
+        return party
+
+    def write_row(self, row: pd.Series) -> None:
+        (
+            speaker_col,
+            gender_col,
+            year_col,
+            party_col,
+            link_col,
+            expander_col,
+        ) = self.get_columns()
+        gender_col.write(row["Kön"])
+        speaker = "Okänd" if row["Talare"] == "" else row["Talare"]
+        q = row["who"] if row["who"] != "unknown" else ""
+        speaker_col.write(f"{speaker}  {q}")
+        year_col.write(row["År"])
+        party_col.markdown(
+            self.get_party_with_color(row["Parti"]), unsafe_allow_html=True
+        )
+        with link_col:
+            st.write(
+                self.link.replace("protokoll", row["Protokoll"]), unsafe_allow_html=True
+            )
+        with expander_col:
+            with st.expander(label="Visa längre text"):
+                st.write(row["longer"])
+
+    def write_header(self) -> None:
+        (
+            speaker_col,
+            gender_col,
+            year_col,
+            party_col,
+            link_col,
+            expander_col,
+        ) = self.get_columns()
+        speaker_col.write("**Talare**")
+        gender_col.write("**Kön**")
+        year_col.write("**År**")
+        party_col.write("**Parti**")
+        link_col.write("**Källa**")
+        expander_col.write("**Tal**")
+
+    def get_columns(self) -> Any:
+        return st.columns([2, 1, 1, 1, 3, 3])
+
+    def increase_page(self) -> None:
+        st.session_state[self.current_page_name] += 1
+
+    def decrease_page(self) -> None:
+        st.session_state[self.current_page_name] -= 1
