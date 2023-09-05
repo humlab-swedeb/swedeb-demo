@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import Any, Iterable
+from typing import Iterable
 
 import streamlit as st
-from api.dummy_api import ADummyApi # type: ignore
+from api.dummy_api import ADummyApi  # type: ignore
 
 
 class PartyDropDown:

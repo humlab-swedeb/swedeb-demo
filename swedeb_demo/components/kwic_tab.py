@@ -2,8 +2,8 @@ from typing import Any
 
 import pandas as pd
 import streamlit as st
-from api.dummy_api import ADummyApi # type: ignore
-from components.meta_data_display import MetaDataDisplay # type: ignore
+from api.dummy_api import ADummyApi  # type: ignore
+from components.meta_data_display import MetaDataDisplay  # type: ignore
 
 from .table_results import TableDisplay
 from .tool_tab import ToolTab
@@ -12,7 +12,9 @@ from .tool_tab import ToolTab
 class KWICDisplay(ToolTab):
     def __init__(self, another_api: ADummyApi, shared_meta: MetaDataDisplay) -> None:
         super().__init__(another_api, shared_meta, "kwick_form")
-        st.caption("Med verktyget **Key Words in Context** kan du söka på enskilda ord och begrepp. Det går också att söka med \* för att få flera träffar. Exempelvis 'debatt*' ")
+        st.caption(
+            "Med verktyget **Key Words in Context** kan du söka på enskilda ord och begrepp. Det går också att söka med \* för att få flera träffar. Exempelvis 'debatt*' "
+        )
         self.top_container = st.container()
         self.middle_container = st.container()
         self.search_button_container = st.container()
@@ -20,14 +22,17 @@ class KWICDisplay(ToolTab):
         self.word_confirm_container = st.container()
 
         # search performed necessary to keep results when switching tabs
-        SEARCH_PERFORMED = "search_performed_kwic"
+        self.SEARCH_PERFORMED = "search_performed_kwic"
         self.CURRENT_PAGE = "current_page_kwic"
 
         self.hits_per_page = 10
 
-        st_dict_when_button_clicked = {SEARCH_PERFORMED: True, self.CURRENT_PAGE: 0}
+        self.st_dict_when_button_clicked = {
+            self.SEARCH_PERFORMED: True,
+            self.CURRENT_PAGE: 0,
+        }
         session_state_initial_values = {
-            SEARCH_PERFORMED: False,
+            self.SEARCH_PERFORMED: False,
             self.CURRENT_PAGE: 0,
         }
 
@@ -38,19 +43,20 @@ class KWICDisplay(ToolTab):
             st.text_input("Skriv sökterm:", key=f"search_box_{self.FORM_KEY}")
             self.add_window_size()
 
-
         with self.search_button_container:
-            search_button = st.button("Sök", key=f"search_button_{self.FORM_KEY}")
+            st.button(
+                "Sök",
+                key=f"search_button_{self.FORM_KEY}",
+                on_click=self.handle_button_click,
+            )
             self.draw_line()
 
-
-
-        if search_button:
-            if not self.handle_search_click(st_dict_when_button_clicked):
-                st.session_state[SEARCH_PERFORMED] = False
-
-        if st.session_state[SEARCH_PERFORMED]:
+        if st.session_state[self.SEARCH_PERFORMED]:
             self.show_display()
+
+    def handle_button_click(self) -> None:
+        if not self.handle_search_click(self.st_dict_when_button_clicked):
+            st.session_state[self.SEARCH_PERFORMED] = False
 
     def add_window_size(self) -> None:
         cols_before, cols_after, _ = st.columns([2, 2, 2])
@@ -77,6 +83,7 @@ class KWICDisplay(ToolTab):
             current_container_key=self.FORM_KEY,
             current_page_name=self.CURRENT_PAGE,
             party_abbrev_to_color=self.api.party_abbrev_to_color,
+            expanded_speech_key="not_used",  # TODO: fix
         )
 
     def show_display(self) -> None:

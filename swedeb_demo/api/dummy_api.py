@@ -20,7 +20,7 @@ import streamlit as st
 class ADummyApi:
     """Dummy API for testing and developing the SweDeb GUI"""
 
-    def __init__(self, env_file:str='.env_sample_data') -> None:
+    def __init__(self, env_file: str = ".env_sample_data") -> None:
         load_dotenv(env_file)
         self.tag: str = os.getenv("TAG")
         self.folder = os.getenv("FOLDER")
@@ -56,8 +56,6 @@ class ADummyApi:
             zip(self.data.party.party_abbrev, self.data.party.party_color)
         )
 
-    st.cache_data
-
     def load_corpus(self) -> None:
         self.corpus = VectorizedCorpus.load(folder=self.folder, tag=self.tag)
 
@@ -71,6 +69,9 @@ class ADummyApi:
 
     def get_speech(self, document_name: str):  # type: ignore
         return self.repository.speech(speech_name=document_name, mode="dict")
+
+    def get_speech_text(self, document_name: str):  # type: ignore
+        return self.repository.to_text(self.get_speech(document_name))
 
     def get_word_vectors(
         self, words: list[str], corpus: VectorizedCorpus = None
@@ -101,8 +102,8 @@ class ADummyApi:
         no_match_len_long: int = 200,
     ) -> tuple[str, str, str, str, str, str, str, str]:
         """Returns speech-related data for a row of selected data"""
-        document_name = self.get_speech(row["document_name"])
-        speech_text = self.repository.to_text(document_name)
+        current_speech = self.get_speech(row["document_name"])
+        speech_text = self.repository.to_text(current_speech)
         current_hit = None
         if "hit" in row:
             current_hit = row["hit"]
@@ -118,12 +119,12 @@ class ADummyApi:
         return (
             speech_text_short,
             speech_text_longer,
-            document_name["party_abbrev"],
-            str(document_name["year"]),
-            document_name["document_name"],
-            document_name["name"],
-            self.gender_to_swedish[document_name["gender"]],
-            document_name["who"],
+            current_speech["party_abbrev"],
+            str(current_speech["year"]),
+            current_speech["document_name"],
+            current_speech["name"],
+            self.gender_to_swedish[current_speech["gender"]],
+            current_speech["who"],
         )
 
     def get_sample_text(
@@ -186,7 +187,7 @@ class ADummyApi:
     def get_anforanden(
         self, from_year: int, to_year: int, selections: dict
     ) -> pd.DataFrame:
-        """For getting the full 'Anföranden' (speeches)
+        """For getting a list of - and info about - the full 'Anföranden' (speeches)
 
         Args:
             from_year int: start year
@@ -194,15 +195,35 @@ class ADummyApi:
             selections dict: selected filters, i.e. genders, parties, and, speakers
 
         Returns:
-            DatFrame: DataFrame with speech texts for selected years and filter.
+            DatFrame: DataFrame with speeches for selected years and filter.
         """
+
         filtered_corpus = self.filter_corpus(selections, self.corpus)
         di_selected = filtered_corpus.document_index
+        di_selected = di_selected[di_selected["year"].between(from_year, to_year)]
 
-        if not di_selected.empty:
-            self.add_speech_content(words_after=-1, words_before=-1, df=di_selected)
+        return self.prepare_anforande_display(di_selected)
 
-        return di_selected[di_selected["year"].between(from_year, to_year)]
+    def prepare_anforande_display(
+        self, anforanden_doc_index: pd.DataFrame
+    ) -> pd.DataFrame:
+        anforanden_doc_index = anforanden_doc_index[
+            ["who", "year", "document_name", "gender_id", "party_id", "protocol_name"]
+        ]
+        adi = anforanden_doc_index.rename(columns={"who": "person_id"})
+        self.person_codecs.decode(adi, drop=False)
+
+        # to sort unknowns to the end of the results
+        sorted_adi = adi.sort_values(by="name", key=lambda x: x == "")
+        return sorted_adi.rename(
+            columns={
+                "name": "Talare",
+                "document_name": "Protokoll",
+                "gender": "Kön",
+                "party_abbrev": "Parti",
+                "year": "År",
+            }
+        )
 
     def get_kwic_results_for_search_hits(
         self,
@@ -266,6 +287,11 @@ class ADummyApi:
         end_year: int,
         normalize: bool = False,
     ) -> pd.DataFrame:
+        
+        if search_term not in self.corpus.vocabulary:
+            return pd.DataFrame(), pd.DataFrame() 
+
+
         trends_data: SweDebTrendsData = SweDebTrendsData(
             corpus=self.corpus, person_codecs=self.person_codecs, n_top=1000000  # type: ignore
         )
@@ -286,6 +312,10 @@ class ADummyApi:
 
         trends_data.transform(opts)
 
+        hit_vec = trends_data.corpus.get_word_vector(search_term)
+        doc_index = trends_data.corpus.document_index
+        hit_di = doc_index[hit_vec.astype(bool)]
+
         trends: pd.DataFrame = trends_data.extract(
             indices=trends_data.find_word_indices(opts)
         )
@@ -305,9 +335,10 @@ class ADummyApi:
             ]
             unstacked_trends = pu.unstack_data(trends, current_pivot_keys)
         self.translate_dataframe(unstacked_trends)
-        return unstacked_trends
+        unstacked_trends = unstacked_trends.loc[:, (unstacked_trends != 0).any(axis=0)]
+        return unstacked_trends, self.prepare_anforande_display(hit_di)
 
-    def translate_gender_col(self, col: str) -> str:
+    def translate_gender_col_header(self, col: str) -> str:
         """Translates gender column names to Swedish
 
         Args:
@@ -334,7 +365,7 @@ class ADummyApi:
         cols = df.columns.tolist()
         translations = {}
         for col in cols:
-            translations[col] = self.translate_gender_col(col)
+            translations[col] = self.translate_gender_col_header(col)
         df.rename(columns=translations, inplace=True)
 
     def get_years_start(self) -> int:

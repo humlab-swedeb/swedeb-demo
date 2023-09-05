@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Optional
 
 import streamlit as st
-from api.dummy_api import ADummyApi # type: ignore
+from api.dummy_api import ADummyApi  # type: ignore
 
 from .gender_checkboxes import GenderCheckBoxes
 from .party_dropdown import PartyDropDown
@@ -12,7 +12,7 @@ from .speaker_dropdown import SpeakerDropDown
 
 # tid, parti, kön, (kammare, valkrets), namn
 class MetaDataDisplay:
-    def __init__(self, st_dict: Any,api: ADummyApi) -> None:
+    def __init__(self, st_dict: Any, api: ADummyApi) -> None:
         self.st_dict = st_dict
         self.another_api = api
         self.min_year = self.another_api.get_years_start()

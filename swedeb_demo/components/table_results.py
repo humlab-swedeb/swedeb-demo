@@ -1,6 +1,5 @@
 import math
 from typing import Any
-
 import pandas as pd
 import streamlit as st
 
@@ -12,15 +11,16 @@ class TableDisplay:
         current_container_key: str,
         current_page_name: str,
         party_abbrev_to_color: dict,
+        expanded_speech_key: str,
     ) -> None:
         self.hits_per_page = hits_per_page
         self.type = type
         self.current_container = current_container_key
         self.current_page_name = current_page_name
-
         dummy_pdf = "https://www.riksdagen.se"
         self.link = f"[protokoll]({dummy_pdf})"
         self.party_colors = party_abbrev_to_color
+        self.expanded_speech_key = expanded_speech_key
 
     def show_table(self, data: pd.DataFrame, type: str = "table") -> None:
         current_page = st.session_state[self.current_page_name]
@@ -60,8 +60,8 @@ class TableDisplay:
 
     def display_partial_source(self, current_df: pd.DataFrame) -> None:
         self.write_header()
-        for _, row in current_df.iterrows():
-            self.write_row(row)
+        for i, row in current_df.iterrows():
+            self.write_row(i, row)
 
     def get_party_with_color(self, party: str) -> str:
         if party in self.party_colors:
@@ -69,7 +69,13 @@ class TableDisplay:
             return f'<p style="color:{color}";>{party}</p>'
         return party
 
-    def write_row(self, row: pd.Series) -> None:
+    def update_speech_state(self, protocol: str, speaker: str, year: str) -> None:
+        st.session_state[self.expanded_speech_key] = True
+        st.session_state["selected_protocol"] = protocol
+        st.session_state["selected_speaker"] = speaker
+        st.session_state["selected_year"] = year
+
+    def write_row(self, i: int, row: pd.Series) -> None:
         (
             speaker_col,
             gender_col,
@@ -78,11 +84,11 @@ class TableDisplay:
             link_col,
             expander_col,
         ) = self.get_columns()
-        gender_col.write(row["Kön"])
+        gender_col.write(self.translate_gender(row["Kön"]))
         speaker = "Okänd" if row["Talare"] == "" else row["Talare"]
-        q = row["who"] if row["who"] != "unknown" else ""
+        q = row["person_id"] if row["person_id"] != "unknown" else ""
         speaker_col.write(f"{speaker}  {q}")
-        year_col.write(row["År"])
+        year_col.write(str(row["År"]))
         party_col.markdown(
             self.get_party_with_color(row["Parti"]), unsafe_allow_html=True
         )
@@ -91,8 +97,20 @@ class TableDisplay:
                 self.link.replace("protokoll", row["Protokoll"]), unsafe_allow_html=True
             )
         with expander_col:
-            with st.expander(label="Visa längre text"):
-                st.write(row["longer"])
+            st.button(
+                "Visa hela anförandet",
+                key=f"{self.current_container}_b_{i}",
+                on_click=self.update_speech_state,
+                args=(row["Protokoll"], speaker, row["År"]),
+            )
+
+    def translate_gender(self, gender: str) -> str:
+        if gender == "man":
+            return "Man"
+        elif gender == "woman":
+            return "Kvinna"
+        else:
+            return "Okänt"
 
     def write_header(self) -> None:
         (

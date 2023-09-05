@@ -2,8 +2,8 @@ from typing import Any
 
 import pandas as pd
 import streamlit as st
-from api.dummy_api import ADummyApi # type: ignore
-from components.meta_data_display import MetaDataDisplay # type: ignore
+from api.dummy_api import ADummyApi  # type: ignore
+from components.meta_data_display import MetaDataDisplay  # type: ignore
 
 
 class ToolTab:
