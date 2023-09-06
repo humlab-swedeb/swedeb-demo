@@ -1,5 +1,5 @@
 import streamlit as st
-from swedeb_demo.api.dummy_api import ADummyApi  # type: ignore
+from api.dummy_api import ADummyApi  # type: ignore
 
 
 class ExpandedSpeechDisplay:
