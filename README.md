@@ -15,4 +15,4 @@ To run with .env file (specifying a corpus)
 To run without displaying the "debug" tab
 
 
-`streamlit run swedeb_demo/main_page_shared_filter.py -- --debug False``
+`streamlit run swedeb_demo/main_page_shared_filter.py -- --debug False`
