@@ -185,7 +185,7 @@ class ADummyApi:
         return 0 if word_index - diff < 0 else word_index - diff
 
     def get_anforanden(
-        self, from_year: int, to_year: int, selections: dict
+        self, from_year: int, to_year: int, selections: dict, di_selected: pd.DataFrame = None
     ) -> pd.DataFrame:
         """For getting a list of - and info about - the full 'Anföranden' (speeches)
 
@@ -197,9 +197,9 @@ class ADummyApi:
         Returns:
             DatFrame: DataFrame with speeches for selected years and filter.
         """
-
-        filtered_corpus = self.filter_corpus(selections, self.corpus)
-        di_selected = filtered_corpus.document_index
+        if di_selected is None:
+            filtered_corpus = self.filter_corpus(selections, self.corpus)
+            di_selected = filtered_corpus.document_index
         di_selected = di_selected[di_selected["year"].between(from_year, to_year)]
 
         return self.prepare_anforande_display(di_selected)
@@ -208,7 +208,7 @@ class ADummyApi:
         self, anforanden_doc_index: pd.DataFrame
     ) -> pd.DataFrame:
         anforanden_doc_index = anforanden_doc_index[
-            ["who", "year", "document_name", "gender_id", "party_id", "protocol_name"]
+            ["who", "year", "document_name", "gender_id", "party_id"]
         ]
         adi = anforanden_doc_index.rename(columns={"who": "person_id"})
         self.person_codecs.decode(adi, drop=False)
@@ -305,16 +305,19 @@ class ADummyApi:
             filter_opts=PropertyValueMaskingOpts(**filter_opts),
             smooth=False,
             temporal_key="year",
-            top_count=100,
+            top_count=10000,
             unstack_tabular=False,
             words=[search_term],
         )
 
         trends_data.transform(opts)
 
-        hit_vec = trends_data.corpus.get_word_vector(search_term)
-        doc_index = trends_data.corpus.document_index
-        hit_di = doc_index[hit_vec.astype(bool)]
+        filtered_corpus = self.filter_corpus(filter_opts, trends_data.corpus)
+        hit_vec = filtered_corpus.get_word_vector(search_term)
+        doc_index = filtered_corpus.document_index[hit_vec.astype(bool)]
+        anforanden = self.get_anforanden(start_year, end_year, filter_opts, doc_index)
+
+        
 
         trends: pd.DataFrame = trends_data.extract(
             indices=trends_data.find_word_indices(opts)
@@ -336,7 +339,7 @@ class ADummyApi:
             unstacked_trends = pu.unstack_data(trends, current_pivot_keys)
         self.translate_dataframe(unstacked_trends)
         unstacked_trends = unstacked_trends.loc[:, (unstacked_trends != 0).any(axis=0)]
-        return unstacked_trends, self.prepare_anforande_display(hit_di)
+        return unstacked_trends, anforanden
 
     def translate_gender_col_header(self, col: str) -> str:
         """Translates gender column names to Swedish

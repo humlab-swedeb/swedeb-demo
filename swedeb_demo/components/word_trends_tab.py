@@ -115,6 +115,7 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
         selections: dict,
         normalize: bool = False,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+
         return _self.api.get_word_trend_results(
             search_word,
             filter_opts=selections,
@@ -122,29 +123,9 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
             end_year=end_year,
             normalize=normalize,
         )
+    
 
-    @st.cache_data
-    def get_kwic_like_data(
-        _self,
-        _api: Any,
-        hits: list,
-        from_year: int,
-        to_year: int,
-        selections: dict,
-    ) -> pd.DataFrame:
-        data = _api.get_kwic_results_for_search_hits(
-            hits,
-            from_year=from_year,
-            to_year=to_year,
-            selections=selections,
-            words_before=-1,
-            words_after=-1,
-        )
-        if data.empty:
-            return data
-        return data[
-            ["Tal", "Talare", "År", "Kön", "Parti", "Protokoll", "longer", "who"]
-        ]
+
 
     def show_display(self) -> None:
         slider = st.session_state["years_slider"]
