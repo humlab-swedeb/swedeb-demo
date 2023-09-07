@@ -106,7 +106,7 @@ def add_tabs(meta_search:Any, api:ADummyApi, debug:bool) -> None:
 
 
 @click.command()
-@click.option('--env_file', default='.env_sample_data', help='Path to .env file with environment variables')
+@click.option('--env_file', default='.env_sample_docker', help='Path to .env file with environment variables')
 @click.option('--debug', default=True, help='Show session state info in debug tab')
 def render_main_page(env_file:str, debug:bool)->None:
     dummy_api = ADummyApi(env_file)
