@@ -14,13 +14,12 @@ from .westac.riksprot.parlaclarin import speech_text as sr
 
 from typing import Union, Mapping, Tuple
 
-import streamlit as st
 
 
 class ADummyApi:
     """Dummy API for testing and developing the SweDeb GUI"""
 
-    def __init__(self, env_file: str = ".env_sample_data") -> None:
+    def __init__(self, env_file: str = ".env_sample_docker") -> None:
         load_dotenv(env_file)
         self.tag: str = os.getenv("TAG")
         self.folder = os.getenv("FOLDER")
