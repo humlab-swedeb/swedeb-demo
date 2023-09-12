@@ -14,9 +14,7 @@ class ToolTab:
         self.search_display = shared_meta
         self.FORM_KEY = form_key
 
-    @st.cache_data
-    def convert_df(_self, df: pd.DataFrame) -> bytes:
-        return df.to_csv(index=False).encode("utf-8")
+ 
 
     def init_session_state(self, session_dict: dict) -> None:
         for k, v in session_dict.items():
@@ -72,10 +70,15 @@ class ToolTab:
             unsafe_allow_html=True,
         )
 
+    @st.cache_data
+    def convert_df(_self, df: pd.DataFrame) -> bytes:
+        return df.to_csv(index=True).encode("utf-8")
+
     def add_download_button(self, data: pd.DataFrame, file_name: str) -> None:
+        
         st.download_button(
             label="Ladda ner som csv",
             data=self.convert_df(data),
             file_name=file_name,
             mime="text/csv",
-        )
+    )

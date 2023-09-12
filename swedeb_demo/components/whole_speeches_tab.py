@@ -18,6 +18,7 @@ class FullSpeechDisplay(ExpandedSpeechDisplay, ToolTab):
         CURRENT_PAGE = "current_page_full"
         SEARCH_PERFORMED = "search_performed_full"
         self.EXPANDED_SPEECH = "expanded_speech_full"
+        self.ROWS_PER_PAGE = "rows_per_page_full"
 
         if (
             self.EXPANDED_SPEECH in st.session_state
@@ -30,6 +31,7 @@ class FullSpeechDisplay(ExpandedSpeechDisplay, ToolTab):
                 CURRENT_PAGE: 0,
                 SEARCH_PERFORMED: False,
                 self.EXPANDED_SPEECH: False,
+                self.ROWS_PER_PAGE: 5,
             }
             self.st_dict_when_button_clicked = {
                 CURRENT_PAGE: 0,
@@ -44,13 +46,12 @@ class FullSpeechDisplay(ExpandedSpeechDisplay, ToolTab):
             self.middle_container = st.container()
             self.bottom_container = st.container()
 
-            self.hits_per_page = 6
             self.table_display = TableDisplay(
-                self.hits_per_page,
                 current_container_key="FULL_SOURCE",
                 current_page_name=CURRENT_PAGE,
                 party_abbrev_to_color=self.api.party_abbrev_to_color,
                 expanded_speech_key=self.EXPANDED_SPEECH,
+                rows_per_table_key=self.ROWS_PER_PAGE,
             )
 
             with self.middle_container:
@@ -94,4 +95,7 @@ class FullSpeechDisplay(ExpandedSpeechDisplay, ToolTab):
     def display_results(self, anforanden: pd.DataFrame) -> None:
         with self.bottom_container:
             self.display_settings_info(with_search_hits=False)
+            _, colb = st.columns([3, 1])
+            with colb:
+                st.selectbox('Antal resultat per sida', options=[5, 10, 20, 50], key=self.ROWS_PER_PAGE)
             self.table_display.show_table(anforanden, type="source")

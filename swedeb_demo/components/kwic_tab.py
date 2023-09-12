@@ -24,8 +24,8 @@ class KWICDisplay(ToolTab):
         # search performed necessary to keep results when switching tabs
         self.SEARCH_PERFORMED = "search_performed_kwic"
         self.CURRENT_PAGE = "current_page_kwic"
+        self.ROWS_PER_PAGE = "rows_per_page_kwic"
 
-        self.hits_per_page = 10
 
         self.st_dict_when_button_clicked = {
             self.SEARCH_PERFORMED: True,
@@ -34,6 +34,7 @@ class KWICDisplay(ToolTab):
         session_state_initial_values = {
             self.SEARCH_PERFORMED: False,
             self.CURRENT_PAGE: 0,
+            self.ROWS_PER_PAGE: 5,
         }
 
         self.init_session_state(session_state_initial_values)
@@ -65,25 +66,25 @@ class KWICDisplay(ToolTab):
                 "Antal ord före sökordet",
                 key=f"n_words_before_{self.FORM_KEY}",
                 min_value=0,
-                max_value=1,
-                value=1,
+                max_value=5,
+                value=2,
             )
         with cols_after:
             st.number_input(
                 "Antal ord efter sökordet",
                 key=f"n_words_after_{self.FORM_KEY}",
                 min_value=0,
-                max_value=1,
-                value=1,
+                max_value=5,
+                value=2,
             )
 
     def define_displays(self) -> None:
         self.table_display = TableDisplay(
-            self.hits_per_page,
             current_container_key=self.FORM_KEY,
             current_page_name=self.CURRENT_PAGE,
             party_abbrev_to_color=self.api.party_abbrev_to_color,
             expanded_speech_key="not_used",  # TODO: fix
+            rows_per_table_key='rows_per_page_kwic' # TODO fix
         )
 
     def show_display(self) -> None:
@@ -93,6 +94,8 @@ class KWICDisplay(ToolTab):
             with self.word_confirm_container:
                 hit_selector = self.add_hit_selector(hits)
             if hit_selector:
+                with self.word_confirm_container:
+                    st.selectbox("Antal resultat per sida", options=[5, 10, 20, 50], key=self.ROWS_PER_PAGE)
                 self.show_hits(hit_selector)
             else:
                 self.display_settings_info_no_hits()
@@ -107,13 +110,16 @@ class KWICDisplay(ToolTab):
             words_before=st.session_state[f"n_words_before_{self.FORM_KEY}"],
             words_after=st.session_state[f"n_words_after_{self.FORM_KEY}"],
         )
+    
         if data.empty:
             self.display_settings_info_no_hits()
         else:
+            #st.dataframe(data)
+            
             with self.result_desc_container:
                 self.display_settings_info()
             self.table_display.show_table(data)
-            self.add_download_button(data, file_name="kwic.csv")
+            
 
     @st.cache_data
     def get_data(
@@ -124,6 +130,7 @@ class KWICDisplay(ToolTab):
         words_before: int,
         words_after: int,
     ) -> pd.DataFrame:
+
         data = _self.api.get_kwic_results_for_search_hits(
             hits,
             from_year=slider[0],
@@ -133,7 +140,4 @@ class KWICDisplay(ToolTab):
             words_after=words_after,
         )
 
-        if data.empty:
-            return data
-        data.rename(columns={"who": "ID"}, inplace=True)
-        return data[["Tal", "Talare", "År", "Kön", "Parti", "Protokoll", "ID"]]
+        return data 

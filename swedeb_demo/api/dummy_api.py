@@ -7,14 +7,15 @@ from dotenv import load_dotenv
 from penelope.common.keyness import KeynessMetric  # type: ignore
 from penelope.corpus import VectorizedCorpus  # type: ignore
 from penelope.utility import PropertyValueMaskingOpts  # type: ignore
+from ccc import Corpus, Corpora
+
 
 from .parlaclarin.trends_data import SweDebComputeOpts, SweDebTrendsData
 from .westac.riksprot.parlaclarin import codecs as md
 from .westac.riksprot.parlaclarin import speech_text as sr
 
-from typing import Union, Mapping, Tuple
+from typing import Union, Mapping
 
-import streamlit as st
 
 
 class ADummyApi:
@@ -55,6 +56,21 @@ class ADummyApi:
         self.party_abbrev_to_color = dict(
             zip(self.data.party.party_abbrev, self.data.party.party_color)
         )
+        self.kwic_corpus = self.load_kwic_corpus()
+        self.words_per_year = self._set_words_per_year()
+
+    def _set_words_per_year(self) -> pd.DataFrame:
+        data_year_series = self.corpus.document_index.groupby("year")["n_raw_tokens"].sum()
+        return data_year_series.to_frame().set_index(data_year_series.index.astype(str))
+
+    def get_words_per_year(self):
+        return self.words_per_year
+
+    def load_kwic_corpus(self) -> Corpus:
+        corpora: Corpora = Corpora(registry_dir="/usr/local/share/cwb/registry/")
+        corpus: Corpus = corpora.corpus(corpus_name="RIKSPROT_V090_TEST")
+        return corpus
+
 
     def load_corpus(self) -> None:
         self.corpus = VectorizedCorpus.load(folder=self.folder, tag=self.tag)
@@ -72,6 +88,16 @@ class ADummyApi:
 
     def get_speech_text(self, document_name: str):  # type: ignore
         return self.repository.to_text(self.get_speech(document_name))
+    
+    
+    def get_speaker_note(self, document_name: str) -> str:
+        speech = self.get_speech(document_name)
+        if speech['speaker_note_id'] == 'missing':
+            return 'Talet saknar notering'
+        else:
+            return speech['speaker_note']
+
+
 
     def get_word_vectors(
         self, words: list[str], corpus: VectorizedCorpus = None
@@ -92,97 +118,15 @@ class ADummyApi:
         for word in words:
             vectors[word] = corpus.get_word_vector(word)
         return vectors
+    
+    def filter_corpus(
+        self, filter_dict: dict, corpus: VectorizedCorpus
+    ) -> VectorizedCorpus:
+        if filter_dict is not None:
+            for key in filter_dict:
+                corpus = corpus.filter(lambda row: row[key] in filter_dict[key])
+        return corpus
 
-    def add_speech(
-        self,
-        row: pd.Series,
-        words_before: int = -1,
-        words_after: int = -1,
-        no_match_len_short: int = 20,
-        no_match_len_long: int = 200,
-    ) -> tuple[str, str, str, str, str, str, str, str]:
-        """Returns speech-related data for a row of selected data"""
-        current_speech = self.get_speech(row["document_name"])
-        speech_text = self.repository.to_text(current_speech)
-        current_hit = None
-        if "hit" in row:
-            current_hit = row["hit"]
-
-        speech_text_short, speech_text_longer = self.get_sample_text(
-            speech_text,
-            current_hit,
-            no_match_len_long,
-            no_match_len_short,
-            words_before,
-            words_after,
-        )
-        return (
-            speech_text_short,
-            speech_text_longer,
-            current_speech["party_abbrev"],
-            str(current_speech["year"]),
-            current_speech["document_name"],
-            current_speech["name"],
-            self.gender_to_swedish[current_speech["gender"]],
-            current_speech["who"],
-        )
-
-    def get_sample_text(
-        self,
-        speech_text: str,
-        current_hit: str,
-        len_long_sample: int,
-        len_short_sample: int,
-        words_before: int,
-        words_after: int,
-    ) -> Tuple[str, str]:
-        """Returns samples of the speech text, with the current search term highlighted
-
-
-        Args:
-            speech_text str: Text content of current speech
-            current_hit str: Current search term
-            no_match_len_long int: Length of longer sample text
-            no_match_len_short int: Length of shorter sample text
-            words_before int: words before current search term (for dummy kwic)
-            words_after int: words after current search term (for dummy kwic)
-
-        Returns:
-            str, str: Shorter and longer sample text surrounding the current search term or text from beginning of speech if no match
-        """
-        if current_hit is None:
-            return speech_text[0:len_short_sample], speech_text[0:len_long_sample]
-        word_index = speech_text.find(current_hit)
-        start_short = self.get_start_index(word_index, len_short_sample, words_before)
-        end_short = self.get_end_index(
-            word_index, len(current_hit), len_short_sample, words_after
-        )
-        start_long = self.get_start_index(word_index, len_long_sample)
-        end_long = self.get_end_index(word_index, len(current_hit), len_long_sample)
-        shorter = speech_text[start_short:end_short]
-        shorter = shorter.replace(current_hit, current_hit.upper())
-
-        longer = speech_text[start_long:end_long]
-        longer = longer.replace(current_hit, f"**{current_hit}**")
-        return shorter, longer
-
-    def get_end_index(
-        self, word_index: int, word_len: int, diff: int, words_after: int = -1
-    ) -> int:
-        """Helper for getting some speech text"""
-        if words_after == 0:
-            return word_index + word_len
-
-        return word_index + word_len + diff if word_index > -1 else diff
-
-    def get_start_index(
-        self, word_index: int, diff: int, words_before: int = -1
-    ) -> int:
-        """Helper for getting some speech text"""
-        if words_before == 0:
-            return word_index
-
-        return 0 if word_index - diff < 0 else word_index - diff
 
     def get_anforanden(
         self, from_year: int, to_year: int, selections: dict
@@ -203,6 +147,12 @@ class ADummyApi:
         di_selected = di_selected[di_selected["year"].between(from_year, to_year)]
 
         return self.prepare_anforande_display(di_selected)
+ 
+
+    def get_link(self, person_id, name):
+        if name == '':
+            'Okänd'
+        return f'[{name}](https://www.wikidata.org/wiki/{person_id})'
 
     def prepare_anforande_display(
         self, anforanden_doc_index: pd.DataFrame
@@ -212,6 +162,8 @@ class ADummyApi:
         ]
         adi = anforanden_doc_index.rename(columns={"who": "person_id"})
         self.person_codecs.decode(adi, drop=False)
+        adi['link'] = adi.apply(lambda x: self.get_link(x['person_id'], x['name']), axis=1)
+        adi.drop(columns=['person_id', 'gender_id', 'party_id'], inplace=True)
 
         # to sort unknowns to the end of the results
         sorted_adi = adi.sort_values(by="name", key=lambda x: x == "")
@@ -225,6 +177,35 @@ class ADummyApi:
             }
         )
 
+    def get_search_term_query(self, search_term):
+        return f'[lemma="{search_term}"]'
+
+
+    def get_query_from_selections(self, selections, prefix):
+        query = ""
+        for key, value in selections.items():
+            query += f'&({prefix}.{key}="{value[0]}"'
+            for v in value[1:]:
+                query += f'|{prefix}.{key}="{v}"'
+            query += ")"
+
+        return query[1:]
+
+
+    def get_query(self, search_term, selection, prefix):
+        term_query = self.get_search_term_query(search_term)
+        if selection:
+            query = f"{prefix}:{term_query}::{self.get_query_from_selections(selection, prefix=prefix)}"
+            return query
+        return term_query
+    
+    def rename_selection_keys(self, selections):
+        renames = {'gender_id':'speech_gender_id', 'party_id':'speech_party_id'}
+        for key, value in renames.items():
+            if key in selections:
+                selections[value] = selections.pop(key)
+        return selections
+
     def get_kwic_results_for_search_hits(
         self,
         search_hits: list,
@@ -233,48 +214,43 @@ class ADummyApi:
         selections: dict,
         words_before: int,
         words_after: int,
-    ) -> pd.DataFrame:
-        """Dummy KWIC data, will be replaced
 
-        Returns:
-            DataFrame: dummy KWIC like data
-        """
-        filtered_corpus = self.filter_corpus(selections, self.corpus)
-        # om filtered corpus är tomt, hantera det här
-        col_vector_dict = self.get_word_vectors(search_hits, corpus=filtered_corpus)
-        if col_vector_dict:
-            dfs = []
-            for word, vector in col_vector_dict.items():
-                current_df = filtered_corpus.document_index[vector.astype(bool)].copy()
-                current_df["hit"] = word
-                dfs.append(current_df)
-            df = pd.concat(dfs)
+    ):
+        selections = self.rename_selection_keys(selections)
+        search_hit = search_hits[0] # start with only one word
+        query_str = self.get_query(search_hit, selections, prefix="a")
+        subcorpus = self.kwic_corpus.query(query_str, #f'[lemma="{search_hit}"]',
+                                           context_left=words_before,
+                                           context_right=words_after)
 
-            self.add_speech_content(words_before, words_after, df)
-
-            return df[df["year"].between(from_year, to_year)]
-        return pd.DataFrame()
-
-    def filter_corpus(
-        self, filter_dict: dict, corpus: VectorizedCorpus
-    ) -> VectorizedCorpus:
-        if filter_dict is not None:
-            for key in filter_dict:
-                corpus = corpus.filter(lambda row: row[key] in filter_dict[key])
-        return corpus
-
-    def add_speech_content(
-        self, words_before: int, words_after: int, df: pd.DataFrame
-    ) -> None:
-        df[
-            ["Tal", "longer", "Parti", "År", "Protokoll", "Talare", "Kön", "who"]
-        ] = df.apply(
-            lambda x: self.add_speech(
-                x, words_before=words_before, words_after=words_after
-            ),
-            axis=1,
-            result_type="expand",
+        data: pd.DataFrame = subcorpus.concordance(
+        # form='dataframe'
+        form="kwic",  # 'simple', 'dataframes',...
+        p_show=["word"],  # ['word', 'pos', 'lemma']
+        s_show=["speech_who", "protocol_title", "year_title", 'speech_party_id', 'speech_gender_id'],
+        order="first",
+        cut_off=100,
+        matches=None,
+        slots=None,
+        cwb_ids=False,
         )
+        renamed_selections = {'speech_gender_id':'gender_id', 'speech_party_id':'party_id', 'speech_who':'person_id'}
+
+        data.reset_index(inplace=True)
+        data.rename(columns=renamed_selections, inplace=True)
+        data = data.astype({"gender_id": int, "party_id": int, 'year_title':int})
+        data = data[data["year_title"].between(from_year, to_year)]   
+        data = data.astype({"year_title": str})
+        data = self.person_codecs.decode(data, drop=False)
+        renamed_columns = {'left_word':'Kontext Vänster', 'node_word':'Sökord',
+                           'right_word':'Kontext Höger', 'year_title':'År', 'name':'Talare',
+                           'party_abbrev':'Parti', 'protocol_title':'Protokoll', 'gender':'Kön'}
+        data.rename(columns=renamed_columns, inplace=True)
+
+
+        return data[['Kontext Vänster', 'Sökord', 'Kontext Höger',  'Parti', 'Talare', 'År', 'Kön','Protokoll', 'person_id',]]
+
+
 
     def get_property_specs(self) -> list:
         return self.data.property_values_specs
@@ -285,11 +261,10 @@ class ADummyApi:
         filter_opts: dict,
         start_year: int,
         end_year: int,
-        normalize: bool = False,
     ) -> pd.DataFrame:
-        
+
         if search_term not in self.corpus.vocabulary:
-            return pd.DataFrame(), pd.DataFrame() 
+            return pd.DataFrame(), pd.DataFrame()
 
 
         trends_data: SweDebTrendsData = SweDebTrendsData(
@@ -299,13 +274,13 @@ class ADummyApi:
 
         opts: SweDebComputeOpts = SweDebComputeOpts(
             fill_gaps=False,
-            keyness=KeynessMetric.TF_normalized if normalize else KeynessMetric.TF,
-            normalize=normalize,
+            keyness=KeynessMetric.TF,
+            normalize=False,
             pivot_keys_id_names=pivot_keys,
             filter_opts=PropertyValueMaskingOpts(**filter_opts),
             smooth=False,
             temporal_key="year",
-            top_count=100,
+            top_count=100000,
             unstack_tabular=False,
             words=[search_term],
         )

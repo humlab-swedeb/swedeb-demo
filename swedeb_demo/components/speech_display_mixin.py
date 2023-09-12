@@ -13,6 +13,8 @@ class ExpandedSpeechDisplay:
             Talare: {st.session_state['selected_speaker']}    
             År: {st.session_state['selected_year']}  
             Anförande: {selected_protocol}
+            
+            Talarnotering: {api.get_speaker_note(selected_protocol)}
             """
             st.info(info_text)
 
@@ -25,6 +27,7 @@ class ExpandedSpeechDisplay:
             )
 
         text = api.get_speech_text(st.session_state["selected_protocol"])
+        text = text.replace("\n", "<br><br>")
         if search_term is not None:
             text = text.replace(
                 search_term,

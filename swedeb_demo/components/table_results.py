@@ -7,17 +7,24 @@ import streamlit as st
 class TableDisplay:
     def __init__(
         self,
-        hits_per_page: int,
         current_container_key: str,
         current_page_name: str,
         party_abbrev_to_color: dict,
         expanded_speech_key: str,
+        rows_per_table_key: str,
     ) -> None:
-        self.hits_per_page = hits_per_page
-        self.type = type
+        self.top_container = st.container()
+        self.table_container = st.container()
+        self.prev_next_container = st.container()
         self.current_container = current_container_key
         self.current_page_name = current_page_name
-        dummy_pdf = "https://www.riksdagen.se"
+        self.rows_per_table_key = rows_per_table_key
+  
+        self.hits_per_page =  5#st.session_state[f"{self.current_container}_hits"]
+        if rows_per_table_key in st.session_state:
+            self.hits_per_page = st.session_state[rows_per_table_key]
+        self.type = type
+        dummy_pdf = "https://www.riksdagen.se/sv/sok/?avd=dokument&doktyp=prot"
         self.link = f"[protokoll]({dummy_pdf})"
         self.party_colors = party_abbrev_to_color
         self.expanded_speech_key = expanded_speech_key
@@ -32,36 +39,39 @@ class TableDisplay:
             current_page
             * self.hits_per_page : ((current_page + 1) * self.hits_per_page)
         ]
-
-        if type == "table":
-            self.display_partial_table(current_df)
-        else:
-            self.display_partial_source(current_df)
+        with self.table_container:
+            if type == "table":
+                self.display_partial_table(current_df)
+            else:
+                self.display_partial_source(current_df)
 
         self.add_buttons(current_page, max_pages)
 
     def add_buttons(self, current_page: int, max_pages: int) -> None:
-        button_col_v, _, info_col, _, button_col_h = st.columns([1, 1, 1, 1, 1])
+        with self.prev_next_container:
+            button_col_v, _, info_col, _, button_col_h = st.columns([1, 1, 1, 1, 1])
 
-        if current_page > 0:
-            button_col_v.button(
-                "Föregående",
-                key=f"{self.current_container}_F",
-                on_click=self.decrease_page,
-            )
-        if current_page < max_pages:
-            button_col_h.button(
-                "Nästa", key=f"{self.current_container}_B", on_click=self.increase_page
-            )
-        info_col.caption(f"Sida {current_page + 1} av {max_pages + 1}")
+            if current_page > 0:
+                button_col_v.button(
+                    "Föregående",
+                    key=f"{self.current_container}_F",
+                    on_click=self.decrease_page,
+                )
+            if current_page < max_pages:
+                button_col_h.button(
+                    "Nästa", key=f"{self.current_container}_B", on_click=self.increase_page
+                )
+            info_col.caption(f"Sida {current_page + 1} av {max_pages + 1}")
 
     def display_partial_table(self, current_df: pd.DataFrame) -> None:
-        st.write(current_df)
+        st.dataframe(current_df.style.format(thousands=" "))
+        self.add_download_button(current_df, "word_trends_table.csv")
 
     def display_partial_source(self, current_df: pd.DataFrame) -> None:
         self.write_header()
         for i, row in current_df.iterrows():
             self.write_row(i, row)
+        self.add_download_button(current_df, "word_trends_anforanden.csv")
 
     def get_party_with_color(self, party: str) -> str:
         if party in self.party_colors:
@@ -85,9 +95,11 @@ class TableDisplay:
             expander_col,
         ) = self.get_columns()
         gender_col.write(self.translate_gender(row["Kön"]))
-        speaker = "Okänd" if row["Talare"] == "" else row["Talare"]
-        q = row["person_id"] if row["person_id"] != "unknown" else ""
-        speaker_col.write(f"{speaker}  {q}")
+        speaker = "Okänd" if row["Talare"] == "" else row["link"]
+        with speaker_col:
+            if row['Talare'] == "":
+                st.write('Okänd')
+            st.write(row["link"]) #, unsafe_allow_html=True)
         year_col.write(str(row["År"]))
         party_col.markdown(
             self.get_party_with_color(row["Parti"]), unsafe_allow_html=True
@@ -136,3 +148,18 @@ class TableDisplay:
 
     def decrease_page(self) -> None:
         st.session_state[self.current_page_name] -= 1
+
+
+    @st.cache_data
+    def convert_df(_self, df: pd.DataFrame) -> bytes:
+        
+        return df.to_csv(index=False).encode("utf-8")
+
+    def add_download_button(self, data: pd.DataFrame, file_name: str) -> None:
+        
+        st.download_button(
+            label="Ladda ner som csv",
+            data=self.convert_df(data),
+            file_name=file_name,
+            mime="text/csv",
+    )
