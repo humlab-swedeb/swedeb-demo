@@ -34,7 +34,7 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
                 self.get_reset_dict(),
                 self.api,
                 self.FORM_KEY,
-                self.get_current_search_as_str(),
+                self.get_search_terms(),
             )
         else:
             st.caption(
@@ -134,15 +134,14 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
         data.drop(columns=["n_raw_tokens"], inplace=True)
 
         return data
+    
+    
 
     def show_display(self) -> None:
         slider = st.session_state["years_slider"]
 
         selections = self.search_display.get_selections()
-        search_terms = self.get_search_box().split(',')
-        search_terms = [term.strip().lower() for term in search_terms]
-
-        hits = self.parse_search_string(search_terms)
+        hits = self.get_search_terms()
 
         
         with self.search_container:
@@ -176,6 +175,13 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
                 self.draw_line()
 
                 self.display_results(data, kwic_like_data, col_page_select)
+
+    def get_search_terms(self):
+        search_terms = self.get_search_box().split(',')
+        search_terms = [term.strip().lower() for term in search_terms]
+
+        hits = self.parse_search_string(search_terms)
+        return hits
 
     def parse_search_string(self, search_terms):
         hits = []

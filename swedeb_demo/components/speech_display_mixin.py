@@ -1,10 +1,10 @@
 import streamlit as st
 from swedeb_demo.api.dummy_api import ADummyApi  # type: ignore
-
+from typing import List
 
 class ExpandedSpeechDisplay:
     def display_speech(
-        self, reset_dict: dict, api: ADummyApi, tab_key: str, search_term: str = None
+        self, reset_dict: dict, api: ADummyApi, tab_key: str, search_terms: List[str] = None
     ) -> None:
         col_1, col_3 = st.columns([3, 1])
         with col_1:
@@ -28,11 +28,12 @@ class ExpandedSpeechDisplay:
 
         text = api.get_speech_text(st.session_state["selected_protocol"])
         text = text.replace("\n", "<br><br>")
-        if search_term is not None:
-            text = text.replace(
-                search_term,
-                f'<span style="background-color: #FFFF00">{search_term}</span>',
-            )
+        if search_terms is not None:
+            for search_term in search_terms:
+                text = text.replace(
+                    search_term,
+                    f'<span style="background-color: #FFFF00">{search_term}</span>',
+                )
         st.markdown(
             f'<p style="border-width:2px; border-style:solid; border-color:#000000; padding: 1em;">{text}</p>',
             unsafe_allow_html=True,
