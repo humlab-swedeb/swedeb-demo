@@ -19,8 +19,8 @@ class TableDisplay:
         self.current_container = current_container_key
         self.current_page_name = current_page_name
         self.rows_per_table_key = rows_per_table_key
-  
-        self.hits_per_page =  5#st.session_state[f"{self.current_container}_hits"]
+
+        self.hits_per_page = 5  # st.session_state[f"{self.current_container}_hits"]
         if rows_per_table_key in st.session_state:
             self.hits_per_page = st.session_state[rows_per_table_key]
         self.type = type
@@ -59,7 +59,9 @@ class TableDisplay:
                 )
             if current_page < max_pages:
                 button_col_h.button(
-                    "Nästa", key=f"{self.current_container}_B", on_click=self.increase_page
+                    "Nästa",
+                    key=f"{self.current_container}_B",
+                    on_click=self.increase_page,
                 )
             info_col.caption(f"Sida {current_page + 1} av {max_pages + 1}")
 
@@ -97,9 +99,9 @@ class TableDisplay:
         gender_col.write(self.translate_gender(row["Kön"]))
         speaker = "Okänd" if row["Talare"] == "" else row["link"]
         with speaker_col:
-            if row['Talare'] == "":
-                st.write('Okänd')
-            st.write(row["link"]) #, unsafe_allow_html=True)
+            if row["Talare"] == "":
+                st.write("Okänd")
+            st.write(row["link"])  # , unsafe_allow_html=True)
         year_col.write(str(row["År"]))
         party_col.markdown(
             self.get_party_with_color(row["Parti"]), unsafe_allow_html=True
@@ -149,17 +151,14 @@ class TableDisplay:
     def decrease_page(self) -> None:
         st.session_state[self.current_page_name] -= 1
 
-
     @st.cache_data
     def convert_df(_self, df: pd.DataFrame) -> bytes:
-        
         return df.to_csv(index=False).encode("utf-8")
 
     def add_download_button(self, data: pd.DataFrame, file_name: str) -> None:
-        
         st.download_button(
             label="Ladda ner som csv",
             data=self.convert_df(data),
             file_name=file_name,
             mime="text/csv",
-    )
+        )

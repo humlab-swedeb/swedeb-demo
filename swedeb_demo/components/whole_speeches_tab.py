@@ -43,7 +43,6 @@ class FullSpeechDisplay(ExpandedSpeechDisplay, ToolTab):
                 "Sök på hela anföranden. Välj tidsintervall, partier, kön och talare till vänster."
             )
             self.top_container = st.container()
-            self.middle_container = st.container()
             self.bottom_container = st.container()
 
             self.table_display = TableDisplay(
@@ -54,7 +53,7 @@ class FullSpeechDisplay(ExpandedSpeechDisplay, ToolTab):
                 rows_per_table_key=self.ROWS_PER_PAGE,
             )
 
-            with self.middle_container:
+            with self.top_container:
                 st.button(
                     "Visa anföranden",
                     key=f"search_button_{self.FORM_KEY}",
@@ -97,5 +96,9 @@ class FullSpeechDisplay(ExpandedSpeechDisplay, ToolTab):
             self.display_settings_info(with_search_hits=False)
             _, colb = st.columns([3, 1])
             with colb:
-                st.selectbox('Antal resultat per sida', options=[5, 10, 20, 50], key=self.ROWS_PER_PAGE)
+                st.selectbox(
+                    "Antal resultat per sida",
+                    options=[5, 10, 20, 50],
+                    key=self.ROWS_PER_PAGE,
+                )
             self.table_display.show_table(anforanden, type="source")

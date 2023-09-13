@@ -14,7 +14,7 @@ from .parlaclarin.trends_data import SweDebComputeOpts, SweDebTrendsData
 from .westac.riksprot.parlaclarin import codecs as md
 from .westac.riksprot.parlaclarin import speech_text as sr
 
-from typing import Union, Mapping
+from typing import Union, Mapping, List
 
 
 
@@ -81,6 +81,7 @@ class ADummyApi:
                 return specification["values"]
 
     def get_word_hits(self, search_term: str, n_hits: int = 5) -> list[str]:
+        search_term = search_term.lower()
         return self.corpus.find_matching_words({f"{search_term}"}, n_hits)
 
     def get_speech(self, document_name: str):  # type: ignore
@@ -177,8 +178,13 @@ class ADummyApi:
             }
         )
 
-    def get_search_term_query(self, search_term):
-        return f'[lemma="{search_term}"]'
+    
+    def construct_multiword_query(search_terms):
+    #[lemma="information"] [lemma="om"]
+        query = ""
+        for term in search_terms:
+            query += f' [lemma="{term}"]'
+        return query[1:]
 
 
     def get_query_from_selections(self, selections, prefix):
@@ -192,12 +198,19 @@ class ADummyApi:
         return query[1:]
 
 
-    def get_query(self, search_term, selection, prefix):
-        term_query = self.get_search_term_query(search_term)
+    def get_query(self, search_terms, selection, prefix):
+        term_query = self.get_search_query_list(search_terms)
         if selection:
             query = f"{prefix}:{term_query}::{self.get_query_from_selections(selection, prefix=prefix)}"
             return query
         return term_query
+    
+    def get_search_query_list(self, search_terms):
+        #[lemma="information"] [lemma="om"]
+        query = ""
+        for term in search_terms:
+            query += f' [lemma="{term}"]'
+        return query[1:]
     
     def rename_selection_keys(self, selections):
         renames = {'gender_id':'speech_gender_id', 'party_id':'speech_party_id'}
@@ -208,18 +221,17 @@ class ADummyApi:
 
     def get_kwic_results_for_search_hits(
         self,
-        search_hits: list,
+        search_hits: List[str],
         from_year: int,
         to_year: int,
         selections: dict,
         words_before: int,
         words_after: int,
 
-    ):
+    )-> pd.DataFrame:
         selections = self.rename_selection_keys(selections)
-        search_hit = search_hits[0] # start with only one word
-        query_str = self.get_query(search_hit, selections, prefix="a")
-        subcorpus = self.kwic_corpus.query(query_str, #f'[lemma="{search_hit}"]',
+        query_str = self.get_query(search_hits, selections, prefix="a")
+        subcorpus = self.kwic_corpus.query(query_str, 
                                            context_left=words_before,
                                            context_right=words_after)
 
@@ -234,6 +246,10 @@ class ADummyApi:
         slots=None,
         cwb_ids=False,
         )
+
+        if len(data) == 0:
+            return pd.DataFrame()
+
         renamed_selections = {'speech_gender_id':'gender_id', 'speech_party_id':'party_id', 'speech_who':'person_id'}
 
         data.reset_index(inplace=True)
@@ -247,7 +263,6 @@ class ADummyApi:
                            'party_abbrev':'Parti', 'protocol_title':'Protokoll', 'gender':'Kön'}
         data.rename(columns=renamed_columns, inplace=True)
 
-
         return data[['Kontext Vänster', 'Sökord', 'Kontext Höger',  'Parti', 'Talare', 'År', 'Kön','Protokoll', 'person_id',]]
 
 
@@ -257,13 +272,15 @@ class ADummyApi:
 
     def get_word_trend_results(
         self,
-        search_term: str,
+        search_terms: List[str],
         filter_opts: dict,
         start_year: int,
         end_year: int,
     ) -> pd.DataFrame:
+        
+        search_terms = [x.lower() for x in search_terms if x in self.corpus.vocabulary]
 
-        if search_term not in self.corpus.vocabulary:
+        if not search_terms:
             return pd.DataFrame(), pd.DataFrame()
 
 
@@ -282,14 +299,21 @@ class ADummyApi:
             temporal_key="year",
             top_count=100000,
             unstack_tabular=False,
-            words=[search_term],
+            words=search_terms,
         )
 
         trends_data.transform(opts)
 
-        hit_vec = trends_data.corpus.get_word_vector(search_term)
-        doc_index = trends_data.corpus.document_index
-        hit_di = doc_index[hit_vec.astype(bool)]
+        vectors =self.get_word_vectors(search_terms)
+        hits = []
+        for word, vec in vectors.items():
+            hit_di = self.corpus.document_index[vec.astype(bool)]
+            print(hit_di.shape, 'hit di shape')
+            anforanden = self.prepare_anforande_display(hit_di)
+            anforanden['hit'] = word
+            hits.append(anforanden)
+        
+        all_hits = pd.concat(hits)
 
         trends: pd.DataFrame = trends_data.extract(
             indices=trends_data.find_word_indices(opts)
@@ -311,8 +335,7 @@ class ADummyApi:
             unstacked_trends = pu.unstack_data(trends, current_pivot_keys)
         self.translate_dataframe(unstacked_trends)
         unstacked_trends = unstacked_trends.loc[:, (unstacked_trends != 0).any(axis=0)]
-        return unstacked_trends, self.prepare_anforande_display(hit_di)
-
+        return unstacked_trends, all_hits
     def translate_gender_col_header(self, col: str) -> str:
         """Translates gender column names to Swedish
 

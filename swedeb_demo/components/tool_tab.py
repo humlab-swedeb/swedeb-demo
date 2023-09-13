@@ -14,8 +14,6 @@ class ToolTab:
         self.search_display = shared_meta
         self.FORM_KEY = form_key
 
- 
-
     def init_session_state(self, session_dict: dict) -> None:
         for k, v in session_dict.items():
             if k not in st.session_state:
@@ -38,7 +36,7 @@ class ToolTab:
     ) -> None:
         if with_search_hits:
             st.info(
-                f"Resultat för sökningen **_{self.get_search_box()}_** {hits}.  \n{self.search_display.get_current_settings()}"
+                f"Resultat för sökningen **_{self.get_search_box()}_** {hits}  \n{self.search_display.get_current_settings()}"
             )
         else:
             st.info(
@@ -75,10 +73,9 @@ class ToolTab:
         return df.to_csv(index=True).encode("utf-8")
 
     def add_download_button(self, data: pd.DataFrame, file_name: str) -> None:
-        
         st.download_button(
             label="Ladda ner som csv",
             data=self.convert_df(data),
             file_name=file_name,
             mime="text/csv",
-    )
+        )

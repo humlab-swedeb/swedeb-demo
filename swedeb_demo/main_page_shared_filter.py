@@ -10,7 +10,7 @@ from typing import Any
 import click
 
 st.set_page_config(
-    page_title="SweDeb DEMO",
+    page_title="SweDeb DEMO b",
 )
 
 

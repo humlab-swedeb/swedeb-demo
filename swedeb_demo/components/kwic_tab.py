@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, List
 
 import pandas as pd
 import streamlit as st
@@ -9,23 +9,21 @@ from .table_results import TableDisplay
 from .tool_tab import ToolTab
 
 
+
 class KWICDisplay(ToolTab):
     def __init__(self, another_api: ADummyApi, shared_meta: MetaDataDisplay) -> None:
         super().__init__(another_api, shared_meta, "kwick_form")
         st.caption(
-            "Med verktyget **Key Words in Context** kan du söka på enskilda ord och begrepp. Det går också att söka med \* för att få flera träffar. Exempelvis 'debatt*' "
+            "Med verktyget **Key Words in Context** kan du söka på ord och fraser, t.ex. `information` eller `information om`. För att få fler träffar kan `.*` användas, t.ex. `information.*`. Under Filtrera sökresultatet kan du avgränsa sökningen till vissa partier, talare eller år. "
         )
         self.top_container = st.container()
-        self.middle_container = st.container()
-        self.search_button_container = st.container()
         self.result_desc_container = st.container()
-        self.word_confirm_container = st.container()
+        self.n_hits_container = st.container()
 
         # search performed necessary to keep results when switching tabs
         self.SEARCH_PERFORMED = "search_performed_kwic"
         self.CURRENT_PAGE = "current_page_kwic"
         self.ROWS_PER_PAGE = "rows_per_page_kwic"
-
 
         self.st_dict_when_button_clicked = {
             self.SEARCH_PERFORMED: True,
@@ -40,11 +38,10 @@ class KWICDisplay(ToolTab):
         self.init_session_state(session_state_initial_values)
         self.define_displays()
 
-        with self.middle_container:
+        with self.top_container:
             st.text_input("Skriv sökterm:", key=f"search_box_{self.FORM_KEY}")
             self.add_window_size()
 
-        with self.search_button_container:
             st.button(
                 "Sök",
                 key=f"search_button_{self.FORM_KEY}",
@@ -84,53 +81,48 @@ class KWICDisplay(ToolTab):
             current_page_name=self.CURRENT_PAGE,
             party_abbrev_to_color=self.api.party_abbrev_to_color,
             expanded_speech_key="not_used",  # TODO: fix
-            rows_per_table_key='rows_per_page_kwic' # TODO fix
+            rows_per_table_key="rows_per_page_kwic",  # TODO fix
         )
 
     def show_display(self) -> None:
-        hits = self.api.get_word_hits(self.get_search_box())
-
-        if hits:
-            with self.word_confirm_container:
-                hit_selector = self.add_hit_selector(hits)
-            if hit_selector:
-                with self.word_confirm_container:
-                    st.selectbox("Antal resultat per sida", options=[5, 10, 20, 50], key=self.ROWS_PER_PAGE)
-                self.show_hits(hit_selector)
-            else:
-                self.display_settings_info_no_hits()
+        hit = self.get_search_box()
+        if hit:
+            hits = [h.strip() for h in hit.split(' ')]
+            self.show_hit(hits)
+            with self.n_hits_container:
+                st.selectbox(
+                    "Antal resultat per sida",
+                    options=[5, 10, 20, 50],
+                    key=self.ROWS_PER_PAGE,
+                )
         else:
             self.display_settings_info_no_hits()
 
-    def show_hits(self, hit_selector: Any) -> None:
+    def show_hit(self, hits: List[str]) -> None:
         data = self.get_data(
-            hit_selector,
+            hits,
             self.search_display.get_slider(),
             selections=self.search_display.get_selections(),
             words_before=st.session_state[f"n_words_before_{self.FORM_KEY}"],
             words_after=st.session_state[f"n_words_after_{self.FORM_KEY}"],
         )
-    
+
         if data.empty:
             self.display_settings_info_no_hits()
         else:
-            #st.dataframe(data)
-            
             with self.result_desc_container:
                 self.display_settings_info()
             self.table_display.show_table(data)
-            
 
     @st.cache_data
     def get_data(
         _self,
-        hits: list[str],
+        hits: List[str],
         slider: Any,
         selections: dict,
         words_before: int,
         words_after: int,
     ) -> pd.DataFrame:
-
         data = _self.api.get_kwic_results_for_search_hits(
             hits,
             from_year=slider[0],
@@ -140,4 +132,4 @@ class KWICDisplay(ToolTab):
             words_after=words_after,
         )
 
-        return data 
+        return data
