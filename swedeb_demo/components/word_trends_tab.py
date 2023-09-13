@@ -185,7 +185,7 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
 
     def parse_search_string(self, search_terms):
         hits = []
-        if len(search_terms) > 1:
+        if len(search_terms) > 0:
             for term in search_terms:
                 current_hits = self.api.get_word_hits(term, n_hits=10)
                 for hit in current_hits:  
