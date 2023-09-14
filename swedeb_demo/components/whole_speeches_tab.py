@@ -51,6 +51,7 @@ class FullSpeechDisplay(ExpandedSpeechDisplay, ToolTab):
                 party_abbrev_to_color=self.api.party_abbrev_to_color,
                 expanded_speech_key=self.EXPANDED_SPEECH,
                 rows_per_table_key=self.ROWS_PER_PAGE,
+                table_type="source",
             )
 
             with self.top_container:
@@ -101,4 +102,4 @@ class FullSpeechDisplay(ExpandedSpeechDisplay, ToolTab):
                     options=[5, 10, 20, 50],
                     key=self.ROWS_PER_PAGE,
                 )
-            self.table_display.show_table(anforanden, type="source")
+            self.table_display.show_table(anforanden)

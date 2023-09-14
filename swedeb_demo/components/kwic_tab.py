@@ -82,6 +82,7 @@ class KWICDisplay(ToolTab):
             party_abbrev_to_color=self.api.party_abbrev_to_color,
             expanded_speech_key="not_used",  # TODO: fix
             rows_per_table_key="rows_per_page_kwic",  # TODO fix
+            table_type="table",
         )
 
     def show_display(self) -> None:

@@ -12,6 +12,7 @@ class TableDisplay:
         party_abbrev_to_color: dict,
         expanded_speech_key: str,
         rows_per_table_key: str,
+        table_type: str,
     ) -> None:
         self.top_container = st.container()
         self.table_container = st.container()
@@ -19,6 +20,7 @@ class TableDisplay:
         self.current_container = current_container_key
         self.current_page_name = current_page_name
         self.rows_per_table_key = rows_per_table_key
+        self.table_type = table_type
 
         self.hits_per_page = 5  # st.session_state[f"{self.current_container}_hits"]
         if rows_per_table_key in st.session_state:
@@ -30,11 +32,11 @@ class TableDisplay:
         self.expanded_speech_key = expanded_speech_key
     
 
-    def show_table(self, data: pd.DataFrame, type: str = "table") -> None:
+    def show_table(self, data: pd.DataFrame) -> None:
         current_page, max_pages = self.get_current_page(len(data))
         current_df = self.get_current_df(data, current_page)
         with self.table_container:
-            if type == "table":
+            if self.table_type == "table":
                 self.display_partial_table(current_df)
             else:
                 self.display_partial_source(current_df)

@@ -103,6 +103,7 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
             party_abbrev_to_color=self.api.party_abbrev_to_color,
             expanded_speech_key="",
             rows_per_table_key=self.ROWS_PER_PAGE_TABLE,
+            table_type='table'
         )
         self.table_display_source = TableDisplay(
             current_container_key="WT_SOURCE",
@@ -110,6 +111,7 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
             party_abbrev_to_color=self.api.party_abbrev_to_color,
             expanded_speech_key=self.EXPANDED_SPEECH,
             rows_per_table_key=self.ROWS_PER_PAGE_SOURCE,
+            table_type='source'
         )
 
     @st.cache_data
@@ -230,7 +232,7 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
                         options=[5, 10, 15],
                         key=self.ROWS_PER_PAGE_SOURCE,
                     )
-                self.table_display_source.show_table(data=kwic_like_data, type="source")
+                self.table_display_source.show_table(data=kwic_like_data)
 
     def radio_normalize(self, key):
         st.radio(

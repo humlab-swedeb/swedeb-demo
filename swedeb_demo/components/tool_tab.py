@@ -20,6 +20,8 @@ class ToolTab:
                 st.session_state[k] = v
 
     def get_search_box(self) -> str:
+        if f"search_box_{self.FORM_KEY}" not in st.session_state:
+            return ""
         return st.session_state[f"search_box_{self.FORM_KEY}"]
 
     def handle_search_click(self, st_dict_when_button_clicked: dict) -> bool:
