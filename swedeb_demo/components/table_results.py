@@ -28,17 +28,11 @@ class TableDisplay:
         self.link = f"[protokoll]({dummy_pdf})"
         self.party_colors = party_abbrev_to_color
         self.expanded_speech_key = expanded_speech_key
+    
 
     def show_table(self, data: pd.DataFrame, type: str = "table") -> None:
-        current_page = st.session_state[self.current_page_name]
-        max_pages = math.ceil(len(data) / self.hits_per_page) - 1
-        if current_page > max_pages:
-            st.session_state[self.current_page_name] = 0
-            current_page = 0
-        current_df = data.iloc[
-            current_page
-            * self.hits_per_page : ((current_page + 1) * self.hits_per_page)
-        ]
+        current_page, max_pages = self.get_current_page(len(data))
+        current_df = self.get_current_df(data, current_page)
         with self.table_container:
             if type == "table":
                 self.display_partial_table(current_df)
@@ -46,6 +40,20 @@ class TableDisplay:
                 self.display_partial_source(current_df)
 
         self.add_buttons(current_page, max_pages)
+
+    def get_current_df(self, data, current_page):
+        return data.iloc[
+            current_page
+            * self.hits_per_page : ((current_page + 1) * self.hits_per_page)
+        ]
+        
+    def get_current_page(self, n_rows):
+        current_page = st.session_state[self.current_page_name]
+        max_pages = math.ceil(n_rows / self.hits_per_page) - 1
+        if current_page > max_pages:
+            st.session_state[self.current_page_name] = 0
+            current_page = 0
+        return current_page,max_pages
 
     def add_buttons(self, current_page: int, max_pages: int) -> None:
         with self.prev_next_container:
@@ -101,7 +109,7 @@ class TableDisplay:
         with speaker_col:
             if row["Talare"] == "":
                 st.write("Okänd")
-            st.write(row["link"])  # , unsafe_allow_html=True)
+            st.write(row["link"])
         year_col.write(str(row["År"]))
         party_col.markdown(
             self.get_party_with_color(row["Parti"]), unsafe_allow_html=True
@@ -112,7 +120,7 @@ class TableDisplay:
             )
         with expander_col:
             st.button(
-                "Visa hela anförandet",
+                "Visa hela",
                 key=f"{self.current_container}_b_{i}",
                 on_click=self.update_speech_state,
                 args=(row["Protokoll"], speaker, row["År"]),
@@ -125,6 +133,9 @@ class TableDisplay:
             return "Kvinna"
         else:
             return "Okänt"
+        
+    def sort_df(self, column):
+        self.df.sort_values(column, ascending=True, inplace=True)
 
     def write_header(self) -> None:
         (
@@ -135,15 +146,17 @@ class TableDisplay:
             link_col,
             expander_col,
         ) = self.get_columns()
-        speaker_col.write("**Talare**")
-        gender_col.write("**Kön**")
-        year_col.write("**År**")
-        party_col.write("**Parti**")
-        link_col.write("**Källa**")
-        expander_col.write("**Tal**")
+        #speaker_col.button("Talare↕", on_click=self.sort_df, args=('Talare',)) # df,'speaker'
+        #gender_col.button("Kön↕", on_click=self.sort_df, args=('Kön',))
+        speaker_col.write("Talare↕")
+        gender_col.write("Kön↕")
+        year_col.write("År↕")
+        party_col.write("Parti↕")
+        link_col.write("Källa↕")
+        expander_col.write("Tal↕")
 
     def get_columns(self) -> Any:
-        return st.columns([2, 1, 1, 1, 3, 3])
+        return st.columns([2, 2, 2, 2, 3, 2])
 
     def increase_page(self) -> None:
         st.session_state[self.current_page_name] += 1

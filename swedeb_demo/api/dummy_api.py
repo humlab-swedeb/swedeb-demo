@@ -303,17 +303,8 @@ class ADummyApi:
         )
 
         trends_data.transform(opts)
-
-        vectors =self.get_word_vectors(search_terms)
-        hits = []
-        for word, vec in vectors.items():
-            hit_di = self.corpus.document_index[vec.astype(bool)]
-            print(hit_di.shape, 'hit di shape')
-            anforanden = self.prepare_anforande_display(hit_di)
-            anforanden['hit'] = word
-            hits.append(anforanden)
-        
-        all_hits = pd.concat(hits)
+       
+        anforanden = self.get_anforanden_for_word_trends(search_terms, filter_opts)
 
         trends: pd.DataFrame = trends_data.extract(
             indices=trends_data.find_word_indices(opts)
@@ -335,7 +326,21 @@ class ADummyApi:
             unstacked_trends = pu.unstack_data(trends, current_pivot_keys)
         self.translate_dataframe(unstacked_trends)
         unstacked_trends = unstacked_trends.loc[:, (unstacked_trends != 0).any(axis=0)]
-        return unstacked_trends, all_hits
+        return unstacked_trends, anforanden
+
+    def get_anforanden_for_word_trends(self, search_terms, filter_opts):
+        filtered_corpus = self.filter_corpus(filter_opts, self.corpus)       
+        vectors =self.get_word_vectors(search_terms, filtered_corpus)
+        hits = []
+        for word, vec in vectors.items():
+            hit_di = filtered_corpus.document_index[vec.astype(bool)]
+            print(hit_di.shape, 'hit di shape')
+            anforanden = self.prepare_anforande_display(hit_di)
+            anforanden['hit'] = word
+            hits.append(anforanden)
+        
+        all_hits = pd.concat(hits)
+        return all_hits
     def translate_gender_col_header(self, col: str) -> str:
         """Translates gender column names to Swedish
 
