@@ -81,3 +81,11 @@ class ToolTab:
             file_name=file_name,
             mime="text/csv",
         )
+
+    def get_sort_direction(self, key) -> None:
+
+        if key not in st.session_state:
+            st.session_state[key] = True
+        else:
+            st.session_state[key] = not st.session_state[key]
+        return st.session_state[key]

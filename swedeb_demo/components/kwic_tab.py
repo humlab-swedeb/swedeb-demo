@@ -24,6 +24,9 @@ class KWICDisplay(ToolTab):
         self.SEARCH_PERFORMED = "search_performed_kwic"
         self.CURRENT_PAGE = "current_page_kwic"
         self.ROWS_PER_PAGE = "rows_per_page_kwic"
+        self.DATA_KEY = "data_kwic"
+        self.SORT_KEY = "sort_key_kwic"
+        self.ASCENDING_KEY = "ascending_kwic"
 
         self.st_dict_when_button_clicked = {
             self.SEARCH_PERFORMED: True,
@@ -83,6 +86,9 @@ class KWICDisplay(ToolTab):
             expanded_speech_key="not_used",  # TODO: fix
             rows_per_table_key="rows_per_page_kwic",  # TODO fix
             table_type="table",
+            data_key=self.DATA_KEY,
+            sort_key=self.SORT_KEY,
+            ascending_key=self.ASCENDING_KEY,
         )
 
     def show_display(self) -> None:
@@ -113,7 +119,8 @@ class KWICDisplay(ToolTab):
         else:
             with self.result_desc_container:
                 self.display_settings_info()
-            self.table_display.show_table(data)
+            st.session_state[self.DATA_KEY] = data
+            self.table_display.write_table()
 
     @st.cache_data
     def get_data(

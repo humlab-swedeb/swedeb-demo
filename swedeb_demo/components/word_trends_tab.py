@@ -25,6 +25,12 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
         self.NORMAL_DIAGRAM_WT = "normalize_diagram_wt"
         self.DISPLAY_SELECT = "wt_display_select"
         self.words_per_year = self.api.get_words_per_year()
+        self.SORT_KEY_TABLE = "sort_key_wt_table"
+        self.SORT_KEY_SOURCE = "sort_key_wt_source"
+        self.ASCENDING_KEY_TABLE = "ascending_wt_table"
+        self.ASCENDING_KEY_SOURCE = "ascending_wt_source"
+        self.DATA_KEY_TABLE = "data_wt_table"
+        self.DATA_KEY_SOURCE = "data_wt_source" #behöver inte sorteras i tabell.....
 
         if (
             self.EXPANDED_SPEECH in st.session_state
@@ -103,7 +109,10 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
             party_abbrev_to_color=self.api.party_abbrev_to_color,
             expanded_speech_key="",
             rows_per_table_key=self.ROWS_PER_PAGE_TABLE,
-            table_type='table'
+            table_type='table',
+            data_key=self.DATA_KEY_TABLE,
+            sort_key=self.SORT_KEY_TABLE,
+            ascending_key=self.ASCENDING_KEY_TABLE,
         )
         self.table_display_source = TableDisplay(
             current_container_key="WT_SOURCE",
@@ -111,7 +120,11 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
             party_abbrev_to_color=self.api.party_abbrev_to_color,
             expanded_speech_key=self.EXPANDED_SPEECH,
             rows_per_table_key=self.ROWS_PER_PAGE_SOURCE,
-            table_type='source'
+            table_type='source',
+            data_key=self.DATA_KEY_SOURCE,
+            sort_key=self.SORT_KEY_SOURCE,
+            ascending_key=self.ASCENDING_KEY_SOURCE,
+        
         )
 
     @st.cache_data
@@ -223,7 +236,8 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
                         options=[5, 10, 15],
                         key=self.ROWS_PER_PAGE_TABLE,
                     )
-                self.table_display_table.show_table(data)
+                st.session_state[self.DATA_KEY_TABLE] = data
+                self.table_display_table.write_table()
 
             else:
                 with col_page_select:
@@ -232,7 +246,73 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
                         options=[5, 10, 15],
                         key=self.ROWS_PER_PAGE_SOURCE,
                     )
-                self.table_display_source.show_table(data=kwic_like_data)
+                (
+                speaker_col,
+                gender_col,
+                year_col,
+                party_col,
+                link_col,
+                expander_col,
+                ) = self.table_display_source.get_columns()
+
+                with speaker_col:
+    
+                    button_sort = st.button('Talare↕', key='sort_button_source')
+                with gender_col:
+                    button_sort_gender = st.button('Kön↕', key='button könssortering_source')
+                with year_col:
+                    button_sort_year = st.button('År↕', key='button årsortering_source')
+                with party_col:
+                    button_sort_party = st.button('Parti↕', key='button partisortering_source')
+                with link_col:
+                    st.write("Källa")
+                with expander_col:
+                    st.write("Tal")
+                sort_key = None
+                if button_sort:
+                    ascending=self.get_sort_direction('talare_sortering_full')
+                    sort_key = 'Talare'
+                    self.table_display_source.reset_page()
+                elif button_sort_gender:
+                    ascending=self.get_sort_direction('gender_sortering_full')
+                    sort_key = 'Kön'
+                    self.table_display_source.reset_page()
+
+                elif button_sort_year:
+                    ascending=self.get_sort_direction('year_sortering_full')
+                    sort_key = 'År'
+                    self.table_display_source.reset_page()
+
+                elif button_sort_party:
+                    ascending = self.get_sort_direction('party_sortering_full')
+                    sort_key = 'Parti'
+                    self.table_display_source.reset_page()
+
+                
+                if sort_key is not None:
+                
+                    st.session_state[self.SORT_KEY_SOURCE] = sort_key
+                    st.session_state[self.ASCENDING_KEY_SOURCE] = ascending
+                    kwic_like_data.sort_values(st.session_state[self.SORT_KEY_SOURCE], ascending=st.session_state[self.ASCENDING_KEY_SOURCE], inplace=True)
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+                st.session_state[self.DATA_KEY_SOURCE] = kwic_like_data
+                self.table_display_source.write_table()
 
     def radio_normalize(self, key):
         st.radio(

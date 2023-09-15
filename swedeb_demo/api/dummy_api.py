@@ -334,7 +334,6 @@ class ADummyApi:
         hits = []
         for word, vec in vectors.items():
             hit_di = filtered_corpus.document_index[vec.astype(bool)]
-            print(hit_di.shape, 'hit di shape')
             anforanden = self.prepare_anforande_display(hit_di)
             anforanden['hit'] = word
             hits.append(anforanden)

@@ -13,6 +13,9 @@ class TableDisplay:
         expanded_speech_key: str,
         rows_per_table_key: str,
         table_type: str,
+        data_key: str,
+        sort_key: str,
+        ascending_key: str,
     ) -> None:
         self.top_container = st.container()
         self.table_container = st.container()
@@ -21,6 +24,9 @@ class TableDisplay:
         self.current_page_name = current_page_name
         self.rows_per_table_key = rows_per_table_key
         self.table_type = table_type
+        self.data_key = data_key
+        self.sort_key = sort_key
+        self.ascending_key = ascending_key
 
         self.hits_per_page = 5  # st.session_state[f"{self.current_container}_hits"]
         if rows_per_table_key in st.session_state:
@@ -30,21 +36,24 @@ class TableDisplay:
         self.link = f"[protokoll]({dummy_pdf})"
         self.party_colors = party_abbrev_to_color
         self.expanded_speech_key = expanded_speech_key
-    
+        
 
-    def show_table(self, data: pd.DataFrame) -> None:
-        current_page, max_pages = self.get_current_page(len(data))
-        current_df = self.get_current_df(data, current_page)
-        with self.table_container:
-            if self.table_type == "table":
-                self.display_partial_table(current_df)
-            else:
-                self.display_partial_source(current_df)
+    def write_table(self) -> None:
+        if self.data_key in st.session_state:
+            if self.sort_key in st.session_state:
+                st.session_state[self.data_key].sort_values(st.session_state[self.sort_key], ascending=st.session_state[self.ascending_key], inplace=True)
+            current_page, max_pages = self.get_current_page(len( st.session_state[self.data_key]))
+            current_df = self.get_current_df(current_page)
+            with self.table_container:
+                if self.table_type == "table":
+                    self.display_partial_table(current_df)
+                else:
+                    self.display_partial_source(current_df)
 
-        self.add_buttons(current_page, max_pages)
+            self.add_buttons(current_page, max_pages)
 
-    def get_current_df(self, data, current_page):
-        return data.iloc[
+    def get_current_df(self, current_page):
+        return  st.session_state[self.data_key].iloc[
             current_page
             * self.hits_per_page : ((current_page + 1) * self.hits_per_page)
         ]
@@ -80,7 +89,9 @@ class TableDisplay:
         self.add_download_button(current_df, "word_trends_table.csv")
 
     def display_partial_source(self, current_df: pd.DataFrame) -> None:
-        self.write_header()
+        
+        #self.write_header()
+
         for i, row in current_df.iterrows():
             self.write_row(i, row)
         self.add_download_button(current_df, "word_trends_anforanden.csv")
@@ -96,6 +107,7 @@ class TableDisplay:
         st.session_state["selected_protocol"] = protocol
         st.session_state["selected_speaker"] = speaker
         st.session_state["selected_year"] = year
+
 
     def write_row(self, i: int, row: pd.Series) -> None:
         (
@@ -135,9 +147,13 @@ class TableDisplay:
             return "Kvinna"
         else:
             return "Okänt"
-        
-    def sort_df(self, column):
-        self.df.sort_values(column, ascending=True, inplace=True)
+
+    def get_sort_direction(self, sort_key):
+        if sort_key not in st.session_state:
+            st.session_state[sort_key] = True
+        else:
+            st.session_state[sort_key] = not st.session_state[sort_key]
+        return st.session_state[sort_key]
 
     def write_header(self) -> None:
         (
@@ -148,14 +164,23 @@ class TableDisplay:
             link_col,
             expander_col,
         ) = self.get_columns()
-        #speaker_col.button("Talare↕", on_click=self.sort_df, args=('Talare',)) # df,'speaker'
-        #gender_col.button("Kön↕", on_click=self.sort_df, args=('Kön',))
-        speaker_col.write("Talare↕")
-        gender_col.write("Kön↕")
-        year_col.write("År↕")
-        party_col.write("Parti↕")
-        link_col.write("Källa↕")
-        expander_col.write("Tal↕")
+        speaker_button = speaker_col.button("Talare↕", key=f'sort_talare{self.current_container}')
+        gender_button = gender_col.button("Kön↕",  key=f'sort_gender{self.current_container}')
+        year_button = year_col.button("År↕",  key=f'sort_år{self.current_container}')
+        party_button = party_col.button("Parti↕",  key=f'sort_parti{self.current_container}')
+
+        if speaker_button and 'data' in st.session_state:
+            st.session_state['data'].sort_values('Talare', ascending=False, inplace=True)
+        if gender_button and 'data' in st.session_state:
+            st.session_state['data'].sort_values('Kön', ascending=False, inplace=True)
+        if year_button and 'data' in st.session_state:
+            st.session_state['data'].sort_values('År', ascending=False, inplace=True)
+        if party_button and 'data' in st.session_state:
+            st.session_state['data'].sort_values('Parti', ascending=False, inplace=True)
+        
+
+        link_col.write("Källa")
+        expander_col.write("Tal")
 
     def get_columns(self) -> Any:
         return st.columns([2, 2, 2, 2, 3, 2])
@@ -165,6 +190,9 @@ class TableDisplay:
 
     def decrease_page(self) -> None:
         st.session_state[self.current_page_name] -= 1
+
+    def reset_page(self) -> None:
+        st.session_state[self.current_page_name] = 0
 
     @st.cache_data
     def convert_df(_self, df: pd.DataFrame) -> bytes:
