@@ -208,44 +208,36 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
                 hits.extend(current_hits)
         hits = list(set(hits))
         return hits
+    
+    def normalize(self, data, normalization_key):
+        self.radio_normalize(normalization_key)
+        normalize = (
+                    st.session_state[normalization_key] == "Normaliserad frekvens"
+                )
+        if normalize:
+            data = self.normalize_word_per_year(data)
+        return data
+
 
     def display_results(
         self, data: pd.DataFrame, kwic_like_data: pd.DataFrame, col_page_select: Any
     ) -> None:
         with self.result_container:
             if st.session_state[self.DISPLAY_SELECT] == "Diagram":
-                self.radio_normalize(self.NORMAL_DIAGRAM_WT)
-                normalize = (
-                    st.session_state[self.NORMAL_DIAGRAM_WT] == "Normaliserad frekvens"
-                )
-                if normalize:
-                    data = self.normalize_word_per_year(data)
-                self.draw_line_figure(data)
+                data = self.normalize(data, self.NORMAL_DIAGRAM_WT)
+                self.draw_line_figure(data) 
 
             elif st.session_state[self.DISPLAY_SELECT] == "Tabell":
-                self.radio_normalize(self.NORMAL_TABLE_WT)
-
-                normalize = (
-                    st.session_state[self.NORMAL_TABLE_WT] == "Normaliserad frekvens"
-                )
-                if normalize:
-                    data = self.normalize_word_per_year(data)
-                with col_page_select:
-                    st.selectbox(
-                        "Antal resultat per sida",
-                        options=[5, 10, 15],
-                        key=self.ROWS_PER_PAGE_TABLE,
-                    )
+                data = self.normalize(data, self.NORMAL_TABLE_WT)
                 st.session_state[self.DATA_KEY_TABLE] = data
+                with col_page_select:
+                    self.hits_per_page(self.ROWS_PER_PAGE_TABLE)
                 self.table_display_table.write_table()
 
             else:
                 with col_page_select:
-                    st.selectbox(
-                        "Antal resultat per sida",
-                        options=[5, 10, 15],
-                        key=self.ROWS_PER_PAGE_SOURCE,
-                    )
+                    self.hits_per_page(self.ROWS_PER_PAGE_SOURCE)
+
                 (
                 speaker_col,
                 gender_col,
@@ -265,31 +257,34 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
                 with party_col:
                     button_sort_party = st.button('Parti↕', key='button partisortering_source')
                 with link_col:
-                    st.write("Källa")
+                    button_source = st.button('Källa↕', key='button källsortering_source')
+    
                 with expander_col:
                     st.write("Tal")
                 sort_key = None
                 if button_sort:
                     ascending=self.get_sort_direction('talare_sortering_full')
                     sort_key = 'Talare'
-                    self.table_display_source.reset_page()
+               
                 elif button_sort_gender:
                     ascending=self.get_sort_direction('gender_sortering_full')
                     sort_key = 'Kön'
-                    self.table_display_source.reset_page()
 
                 elif button_sort_year:
                     ascending=self.get_sort_direction('year_sortering_full')
                     sort_key = 'År'
-                    self.table_display_source.reset_page()
 
                 elif button_sort_party:
                     ascending = self.get_sort_direction('party_sortering_full')
                     sort_key = 'Parti'
-                    self.table_display_source.reset_page()
+
+                elif button_source:
+                    ascending = self.get_sort_direction('source_sortering_full')
+                    sort_key = 'Protokoll'
 
                 
                 if sort_key is not None:
+                    self.table_display_source.reset_page()
                 
                     st.session_state[self.SORT_KEY_SOURCE] = sort_key
                     st.session_state[self.ASCENDING_KEY_SOURCE] = ascending
@@ -313,6 +308,15 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
                 
                 st.session_state[self.DATA_KEY_SOURCE] = kwic_like_data
                 self.table_display_source.write_table()
+
+    def hits_per_page(self, key):
+
+        st.selectbox(
+                    "Antal resultat per sida",
+                    options=[5, 10, 15],
+                    key=key,
+                )
+
 
     def radio_normalize(self, key):
         st.radio(

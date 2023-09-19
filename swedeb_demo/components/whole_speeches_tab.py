@@ -130,31 +130,32 @@ class FullSpeechDisplay(ExpandedSpeechDisplay, ToolTab):
             with party_col:
                 button_sort_party = st.button('Parti↕', key='button partisortering')
             with link_col:
-                st.write("Källa")
+                button_sort_source = st.button('Källa↕', key='button protokollsortering')
             with expander_col:
                 st.write("Tal")
             sort_key = None
             if button_sort:
                 ascending=self.get_sort_direction('talare_sortering_full')
                 sort_key = 'Talare'
-                self.table_display.reset_page()
             elif button_sort_gender:
                 ascending=self.get_sort_direction('gender_sortering_full')
                 sort_key = 'Kön'
-                self.table_display.reset_page()
 
             elif button_sort_year:
                 ascending=self.get_sort_direction('year_sortering_full')
                 sort_key = 'År'
-                self.table_display.reset_page()
 
             elif button_sort_party:
                 ascending = self.get_sort_direction('party_sortering_full')
                 sort_key = 'Parti'
-                self.table_display.reset_page()
+            elif button_sort_source:
+                sort_key = 'Protokoll'
+                ascending = self.get_sort_direction('protokoll_sortering_full')
+
 
             
             if sort_key is not None:
+                self.table_display.reset_page()
             
                 st.session_state[self.SORT_KEY] = sort_key
                 st.session_state[self.ASCENDING_KEY] = ascending

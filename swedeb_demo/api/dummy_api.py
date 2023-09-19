@@ -258,12 +258,14 @@ class ADummyApi:
         data = data[data["year_title"].between(from_year, to_year)]   
         data = data.astype({"year_title": str})
         data = self.person_codecs.decode(data, drop=False)
+        data['link'] = data.apply(lambda x: self.get_link(x['person_id'], x['name']), axis=1)
         renamed_columns = {'left_word':'Kontext Vänster', 'node_word':'Sökord',
                            'right_word':'Kontext Höger', 'year_title':'År', 'name':'Talare',
                            'party_abbrev':'Parti', 'protocol_title':'Protokoll', 'gender':'Kön'}
         data.rename(columns=renamed_columns, inplace=True)
 
-        return data[['Kontext Vänster', 'Sökord', 'Kontext Höger',  'Parti', 'Talare', 'År', 'Kön','Protokoll', 'person_id',]]
+
+        return data[['Kontext Vänster', 'Sökord', 'Kontext Höger',  'Parti', 'Talare', 'År', 'Kön','Protokoll', 'person_id', 'link']]
 
 
 

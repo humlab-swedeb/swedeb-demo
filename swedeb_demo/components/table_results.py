@@ -47,6 +47,8 @@ class TableDisplay:
             with self.table_container:
                 if self.table_type == "table":
                     self.display_partial_table(current_df)
+                elif self.table_type == "kwic":
+                    self.display_partial_kwic(current_df)
                 else:
                     self.display_partial_source(current_df)
 
@@ -90,11 +92,15 @@ class TableDisplay:
 
     def display_partial_source(self, current_df: pd.DataFrame) -> None:
         
-        #self.write_header()
 
         for i, row in current_df.iterrows():
             self.write_row(i, row)
-        self.add_download_button(current_df, "word_trends_anforanden.csv")
+        self.add_download_button(current_df, "anforanden.csv")
+    
+    def display_partial_kwic(self, current_df: pd.DataFrame) -> None:
+        for i, row in current_df.iterrows():
+            self.write_kwic_row(i, row)
+        self.add_download_button(current_df, "kwic.csv")
 
     def get_party_with_color(self, party: str) -> str:
         if party in self.party_colors:
@@ -108,6 +114,35 @@ class TableDisplay:
         st.session_state["selected_speaker"] = speaker
         st.session_state["selected_year"] = year
 
+    def get_kwick_columns(self) -> Any:
+        return st.columns([2,2,2,1,1,2,1,1,2])
+
+    def write_kwic_row(self, i: int, row: pd.Series) -> None:
+        # Kontext Vänster, Sökord, Kontext Höger, Parti, År, Talare, Protokoll, person_id, link
+        left_col, hit_col, right_col, party_col, year_col, speaker_col, gender_col, prot_col, expander_col = self.get_kwick_columns()
+        gender_col.write(self.translate_gender(['Kön']))
+        speaker = "Okänd" if row["Talare"] == "" else row["link"]
+        speaker_col.write(speaker)
+        party_col.markdown(
+            self.get_party_with_color(row["Parti"]), unsafe_allow_html=True
+        )
+        with prot_col:
+            st.write(
+                self.link.replace("protokoll", self.translate_protocol(row["Protokoll"])), unsafe_allow_html=True
+        )
+        year_col.write(str(row["År"]))
+        with expander_col:
+            st.button(
+                "Visa hela",
+                key=f"{self.current_container}_b_{i}",
+                on_click=self.update_speech_state,
+                args=(row["Protokoll"], speaker, row["År"]),
+        )
+        left_col.write(row['Kontext Vänster'])
+        hit_col.write(row['Sökord'])
+        right_col.write(row['Kontext Höger'])
+
+
 
     def write_row(self, i: int, row: pd.Series) -> None:
         (
@@ -120,17 +155,14 @@ class TableDisplay:
         ) = self.get_columns()
         gender_col.write(self.translate_gender(row["Kön"]))
         speaker = "Okänd" if row["Talare"] == "" else row["link"]
-        with speaker_col:
-            if row["Talare"] == "":
-                st.write("Okänd")
-            st.write(row["link"])
+        speaker_col.write(speaker)
         year_col.write(str(row["År"]))
         party_col.markdown(
             self.get_party_with_color(row["Parti"]), unsafe_allow_html=True
         )
         with link_col:
             st.write(
-                self.link.replace("protokoll", row["Protokoll"]), unsafe_allow_html=True
+                self.link.replace("protokoll", self.translate_protocol(row["Protokoll"])), unsafe_allow_html=True
             )
         with expander_col:
             st.button(
@@ -148,39 +180,6 @@ class TableDisplay:
         else:
             return "Okänt"
 
-    def get_sort_direction(self, sort_key):
-        if sort_key not in st.session_state:
-            st.session_state[sort_key] = True
-        else:
-            st.session_state[sort_key] = not st.session_state[sort_key]
-        return st.session_state[sort_key]
-
-    def write_header(self) -> None:
-        (
-            speaker_col,
-            gender_col,
-            year_col,
-            party_col,
-            link_col,
-            expander_col,
-        ) = self.get_columns()
-        speaker_button = speaker_col.button("Talare↕", key=f'sort_talare{self.current_container}')
-        gender_button = gender_col.button("Kön↕",  key=f'sort_gender{self.current_container}')
-        year_button = year_col.button("År↕",  key=f'sort_år{self.current_container}')
-        party_button = party_col.button("Parti↕",  key=f'sort_parti{self.current_container}')
-
-        if speaker_button and 'data' in st.session_state:
-            st.session_state['data'].sort_values('Talare', ascending=False, inplace=True)
-        if gender_button and 'data' in st.session_state:
-            st.session_state['data'].sort_values('Kön', ascending=False, inplace=True)
-        if year_button and 'data' in st.session_state:
-            st.session_state['data'].sort_values('År', ascending=False, inplace=True)
-        if party_button and 'data' in st.session_state:
-            st.session_state['data'].sort_values('Parti', ascending=False, inplace=True)
-        
-
-        link_col.write("Källa")
-        expander_col.write("Tal")
 
     def get_columns(self) -> Any:
         return st.columns([2, 2, 2, 2, 3, 2])
@@ -205,3 +204,10 @@ class TableDisplay:
             file_name=file_name,
             mime="text/csv",
         )
+
+    def translate_protocol(self, protocol_name:str)->str:
+        split = protocol_name.split('-')
+        chamber = split[3]
+        #chamber = chamber.replace('ak', 'Andra kammaren')
+        #chamber = chamber.replace('fk', 'Första kammaren')
+        return f'{chamber}  {split[5].split("_")[0]}'
