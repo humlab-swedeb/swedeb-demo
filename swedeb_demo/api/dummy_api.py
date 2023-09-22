@@ -14,13 +14,14 @@ from .parlaclarin.trends_data import SweDebComputeOpts, SweDebTrendsData
 from .westac.riksprot.parlaclarin import codecs as md
 from .westac.riksprot.parlaclarin import speech_text as sr
 
-from typing import Union, Mapping, List
+from typing import Union, Mapping, Tuple
+
 
 
 class ADummyApi:
     """Dummy API for testing and developing the SweDeb GUI"""
 
-    def __init__(self, env_file: str = ".env_sample_data") -> None:
+    def __init__(self, env_file: str = ".env_sample_docker") -> None:
         load_dotenv(env_file)
         self.tag: str = os.getenv("TAG")
         self.folder = os.getenv("FOLDER")
@@ -128,7 +129,7 @@ class ADummyApi:
         return corpus
 
     def get_anforanden(
-        self, from_year: int, to_year: int, selections: dict
+        self, from_year: int, to_year: int, selections: dict, di_selected: pd.DataFrame = None
     ) -> pd.DataFrame:
         """For getting a list of - and info about - the full 'Anföranden' (speeches)
 
@@ -140,9 +141,9 @@ class ADummyApi:
         Returns:
             DatFrame: DataFrame with speeches for selected years and filter.
         """
-
-        filtered_corpus = self.filter_corpus(selections, self.corpus)
-        di_selected = filtered_corpus.document_index
+        if di_selected is None:
+            filtered_corpus = self.filter_corpus(selections, self.corpus)
+            di_selected = filtered_corpus.document_index
         di_selected = di_selected[di_selected["year"].between(from_year, to_year)]
 
         return self.prepare_anforande_display(di_selected)
@@ -156,7 +157,7 @@ class ADummyApi:
         self, anforanden_doc_index: pd.DataFrame
     ) -> pd.DataFrame:
         anforanden_doc_index = anforanden_doc_index[
-            ["who", "year", "document_name", "gender_id", "party_id", "protocol_name"]
+            ["who", "year", "document_name", "gender_id", "party_id"]
         ]
         adi = anforanden_doc_index.rename(columns={"who": "person_id"})
         self.person_codecs.decode(adi, drop=False)

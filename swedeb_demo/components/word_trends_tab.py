@@ -125,12 +125,15 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
         end_year: int,
         selections: dict,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+
         return _self.api.get_word_trend_results(
             search_words,
             filter_opts=selections,
             start_year=start_year,
             end_year=end_year,
         )
+    
+
 
     def normalize_word_per_year(self, data: pd.DataFrame) -> pd.DataFrame:
         data = data.merge(self.words_per_year, left_index=True, right_index=True)

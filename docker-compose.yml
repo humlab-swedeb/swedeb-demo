@@ -1,0 +1,10 @@
+version: "3"
+services:
+  swedeb:
+    build: ./docker
+    restart: unless-stopped
+    ports:
+      - 8501:8501
+    volumes:
+      - ./mounts/app/swedeb-demo/swedeb_demo/:/app
+      - ./mounts/app/sample-data/data/dataset-01/v0.6.0:/app/sample_data   
