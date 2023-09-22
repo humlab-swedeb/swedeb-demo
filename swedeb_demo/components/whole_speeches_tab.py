@@ -1,3 +1,5 @@
+from .tool_tab import ToolTab
+from .speech_display_mixin import ExpandedSpeechDisplay
 from typing import Any
 
 import pandas as pd
@@ -6,39 +8,36 @@ from api.dummy_api import ADummyApi  # type: ignore
 from components.meta_data_display import MetaDataDisplay  # type: ignore
 
 from .table_results import TableDisplay
-from .tool_tab import ToolTab
 
-from .speech_display_mixin import ExpandedSpeechDisplay
 
 
 class FullSpeechDisplay(ExpandedSpeechDisplay, ToolTab):
-    def __init__(self, another_api: ADummyApi, shared_meta: MetaDataDisplay) -> None:
-        super().__init__(another_api, shared_meta, "full_form")
+    def __init__(
+        self, another_api: ADummyApi, shared_meta: MetaDataDisplay, tab_key: str
+    ) -> None:
+        super().__init__(another_api, shared_meta, tab_key)
 
-        CURRENT_PAGE = "current_page_full"
-        SEARCH_PERFORMED = "search_performed_full"
-        self.EXPANDED_SPEECH = "expanded_speech_full"
-        self.ROWS_PER_PAGE = "rows_per_page_full"
-        self.DATA_KEY = "data_full"
-        self.SORT_KEY = "sort_key_full"
-        self.ASCENDING_KEY = "ascending_full"
+        self.CURRENT_PAGE = f"current_page_{self.TAB_KEY}"
+        self.SEARCH_PERFORMED = f"search_performed_{self.TAB_KEY}"
+        self.EXPANDED_SPEECH = f"expanded_speech_{self.TAB_KEY}"
+        self.ROWS_PER_PAGE = f"rows_per_page_{self.TAB_KEY}"
+        self.DATA_KEY = f"data_{self.TAB_KEY}"
+        self.SORT_KEY = f"sort_key_{self.TAB_KEY}"
+        self.ASCENDING_KEY = f"ascending_{self.TAB_KEY}"
 
-        if (
-            self.EXPANDED_SPEECH in st.session_state
-            and st.session_state[self.EXPANDED_SPEECH]
-        ):
+        if self.has_and_is(self.EXPANDED_SPEECH):
             reset_dict = {self.EXPANDED_SPEECH: False}
-            self.display_speech(reset_dict, self.api, self.FORM_KEY)
+            self.display_expanded_speech(reset_dict, self.api, self.TAB_KEY)
         else:
             session_state_initial_values = {
-                CURRENT_PAGE: 0,
-                SEARCH_PERFORMED: False,
+                self.CURRENT_PAGE: 0,
+                self.SEARCH_PERFORMED: False,
                 self.EXPANDED_SPEECH: False,
                 self.ROWS_PER_PAGE: 5,
             }
             self.st_dict_when_button_clicked = {
-                CURRENT_PAGE: 0,
-                SEARCH_PERFORMED: True,
+                self.CURRENT_PAGE: 0,
+                self.SEARCH_PERFORMED: True,
                 self.EXPANDED_SPEECH: False,
             }
 
@@ -49,28 +48,22 @@ class FullSpeechDisplay(ExpandedSpeechDisplay, ToolTab):
             self.bottom_container = st.container()
 
             self.table_display = TableDisplay(
-                current_container_key="FULL_SOURCE",
-                current_page_name=CURRENT_PAGE,
+                current_container_key=self.TAB_KEY,
+                current_page_name=self.CURRENT_PAGE,
                 party_abbrev_to_color=self.api.party_abbrev_to_color,
                 expanded_speech_key=self.EXPANDED_SPEECH,
                 rows_per_table_key=self.ROWS_PER_PAGE,
                 table_type="source",
                 data_key=self.DATA_KEY,
-                sort_key=self.SORT_KEY,
-                ascending_key=self.ASCENDING_KEY,
             )
 
             with self.top_container:
-                st.button(
-                    "Visa anföranden",
-                    key=f"search_button_{self.FORM_KEY}",
-                    on_click=self.handle_button_click,
-                )
+                self.add_search_button("Visa anföranden")
                 self.draw_line()
 
             self.init_session_state(session_state_initial_values)
 
-            if st.session_state[SEARCH_PERFORMED]:
+            if st.session_state[self.SEARCH_PERFORMED]:
                 self.show_display()
 
     def handle_button_click(self) -> None:
@@ -98,70 +91,67 @@ class FullSpeechDisplay(ExpandedSpeechDisplay, ToolTab):
         else:
             self.display_results(anforanden)
 
-
     def display_results(self, anforanden: pd.DataFrame) -> None:
         with self.bottom_container:
             self.display_settings_info(with_search_hits=False)
-            _, col_right = st.columns([4,2])
-           
+            _, col_right = st.columns([4, 2])
+
             with col_right:
-                st.selectbox(
-                    "Antal resultat per sida",
-                    options=[5, 10, 20, 50],
-                    key=self.ROWS_PER_PAGE,
-                )
-            
+                self.add_hits_per_page(self.ROWS_PER_PAGE)
+                self.add_download_button(anforanden, "anforanden.csv")
+            self.draw_line()
+
             (
-            speaker_col,
-            gender_col,
-            year_col,
-            party_col,
-            link_col,
-            expander_col,
+                speaker_col,
+                gender_col,
+                year_col,
+                party_col,
+                link_col,
+                expander_col,
             ) = self.table_display.get_columns()
 
             with speaker_col:
-   
-                button_sort = st.button('Talare↕', key='sort_button')
+                st.button(
+                    "Talare↕",
+                    key="sort_button",
+                    on_click=self.set_sorting,
+                    args=("Talare",),
+                )
             with gender_col:
-                button_sort_gender = st.button('Kön↕', key='button könssortering')
+                st.button(
+                    "Kön↕",
+                    key="button könssortering",
+                    on_click=self.set_sorting,
+                    args=("Kön",),
+                )
             with year_col:
-                button_sort_year = st.button('År↕', key='button årsortering')
+                st.button(
+                    "År↕",
+                    key="button årsortering",
+                    on_click=self.set_sorting,
+                    args=("År",),
+                )
             with party_col:
-                button_sort_party = st.button('Parti↕', key='button partisortering')
+                st.button(
+                    "Parti↕",
+                    key="button partisortering",
+                    on_click=self.set_sorting,
+                    args=("Parti",),
+                )
             with link_col:
-                button_sort_source = st.button('Källa↕', key='button protokollsortering')
-            with expander_col:
-                st.write("Tal")
-            sort_key = None
-            if button_sort:
-                ascending=self.get_sort_direction('talare_sortering_full')
-                sort_key = 'Talare'
-            elif button_sort_gender:
-                ascending=self.get_sort_direction('gender_sortering_full')
-                sort_key = 'Kön'
+                st.button(
+                    "Källa↕",
+                    key="button protokollsortering",
+                    on_click=self.set_sorting,
+                    args=("Protokoll",),
+                )
 
-            elif button_sort_year:
-                ascending=self.get_sort_direction('year_sortering_full')
-                sort_key = 'År'
-
-            elif button_sort_party:
-                ascending = self.get_sort_direction('party_sortering_full')
-                sort_key = 'Parti'
-            elif button_sort_source:
-                sort_key = 'Protokoll'
-                ascending = self.get_sort_direction('protokoll_sortering_full')
-
-
-            
-            if sort_key is not None:
-                self.table_display.reset_page()
-            
-                st.session_state[self.SORT_KEY] = sort_key
-                st.session_state[self.ASCENDING_KEY] = ascending
-                anforanden.sort_values(st.session_state[self.SORT_KEY], ascending=st.session_state[self.ASCENDING_KEY], inplace=True)
-            
-        
+            if self.SORT_KEY in st.session_state:
+                anforanden.sort_values(
+                    st.session_state[self.SORT_KEY],
+                    ascending=st.session_state[self.ASCENDING_KEY],
+                    inplace=True,
+                )
 
             st.session_state[self.DATA_KEY] = anforanden
             self.table_display.write_table()

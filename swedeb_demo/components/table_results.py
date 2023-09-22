@@ -14,8 +14,6 @@ class TableDisplay:
         rows_per_table_key: str,
         table_type: str,
         data_key: str,
-        sort_key: str,
-        ascending_key: str,
     ) -> None:
         self.top_container = st.container()
         self.table_container = st.container()
@@ -25,8 +23,6 @@ class TableDisplay:
         self.rows_per_table_key = rows_per_table_key
         self.table_type = table_type
         self.data_key = data_key
-        self.sort_key = sort_key
-        self.ascending_key = ascending_key
 
         self.hits_per_page = 5  # st.session_state[f"{self.current_container}_hits"]
         if rows_per_table_key in st.session_state:
@@ -36,18 +32,18 @@ class TableDisplay:
         self.link = f"[protokoll]({dummy_pdf})"
         self.party_colors = party_abbrev_to_color
         self.expanded_speech_key = expanded_speech_key
-        
 
     def write_table(self) -> None:
         if self.data_key in st.session_state:
-            if self.sort_key in st.session_state:
-                st.session_state[self.data_key].sort_values(st.session_state[self.sort_key], ascending=st.session_state[self.ascending_key], inplace=True)
-            current_page, max_pages = self.get_current_page(len( st.session_state[self.data_key]))
+            current_page, max_pages = self.get_current_page(
+                len(st.session_state[self.data_key])
+            )
             current_df = self.get_current_df(current_page)
             with self.table_container:
                 if self.table_type == "table":
                     self.display_partial_table(current_df)
                 elif self.table_type == "kwic":
+                    # self.display_partial_kwic(st.session_state[self.data_key])
                     self.display_partial_kwic(current_df)
                 else:
                     self.display_partial_source(current_df)
@@ -55,18 +51,18 @@ class TableDisplay:
             self.add_buttons(current_page, max_pages)
 
     def get_current_df(self, current_page):
-        return  st.session_state[self.data_key].iloc[
+        return st.session_state[self.data_key].iloc[
             current_page
             * self.hits_per_page : ((current_page + 1) * self.hits_per_page)
         ]
-        
+
     def get_current_page(self, n_rows):
         current_page = st.session_state[self.current_page_name]
         max_pages = math.ceil(n_rows / self.hits_per_page) - 1
         if current_page > max_pages:
             st.session_state[self.current_page_name] = 0
             current_page = 0
-        return current_page,max_pages
+        return current_page, max_pages
 
     def add_buttons(self, current_page: int, max_pages: int) -> None:
         with self.prev_next_container:
@@ -88,19 +84,16 @@ class TableDisplay:
 
     def display_partial_table(self, current_df: pd.DataFrame) -> None:
         st.dataframe(current_df.style.format(thousands=" "))
-        self.add_download_button(current_df, "word_trends_table.csv")
+        # self.add_download_button(current_df, "word_trends_table.csv")
 
     def display_partial_source(self, current_df: pd.DataFrame) -> None:
-        
-
         for i, row in current_df.iterrows():
             self.write_row(i, row)
-        self.add_download_button(current_df, "anforanden.csv")
-    
+        # self.add_download_button(current_df, "anforanden.csv")
+
     def display_partial_kwic(self, current_df: pd.DataFrame) -> None:
         for i, row in current_df.iterrows():
             self.write_kwic_row(i, row)
-        self.add_download_button(current_df, "kwic.csv")
 
     def get_party_with_color(self, party: str) -> str:
         if party in self.party_colors:
@@ -115,34 +108,45 @@ class TableDisplay:
         st.session_state["selected_year"] = year
 
     def get_kwick_columns(self) -> Any:
-        return st.columns([2,2,2,1,1,2,1,1,2])
+        return st.columns([2, 2, 2, 2, 1, 2, 3])
+
 
     def write_kwic_row(self, i: int, row: pd.Series) -> None:
-        # Kontext Vänster, Sökord, Kontext Höger, Parti, År, Talare, Protokoll, person_id, link
-        left_col, hit_col, right_col, party_col, year_col, speaker_col, gender_col, prot_col, expander_col = self.get_kwick_columns()
-        gender_col.write(self.translate_gender(['Kön']))
+        (
+            left_col,
+            hit_col,
+            right_col,
+            party_col,
+            year_col,
+            speaker_col,
+            # gender_col,
+            prot_col,
+            # expander_col,
+        ) = self.get_kwick_columns()
+        # gender_col.write(self.translate_gender(["Kön"], short=True))
         speaker = "Okänd" if row["Talare"] == "" else row["link"]
         speaker_col.write(speaker)
         party_col.markdown(
             self.get_party_with_color(row["Parti"]), unsafe_allow_html=True
         )
-        with prot_col:
-            st.write(
-                self.link.replace("protokoll", self.translate_protocol(row["Protokoll"])), unsafe_allow_html=True
-        )
+        # with prot_col:
+        #    st.write(
+        #        self.link.replace(
+        #            "protokoll", self.translate_protocol(row["Protokoll"])
+        #        ),
+        #        unsafe_allow_html=True,
+        #    )
         year_col.write(str(row["År"]))
-        with expander_col:
+        with prot_col:
             st.button(
-                "Visa hela",
+                f"Anförande",  # {row['Protokoll']}
                 key=f"{self.current_container}_b_{i}",
                 on_click=self.update_speech_state,
                 args=(row["Protokoll"], speaker, row["År"]),
-        )
-        left_col.write(row['Kontext Vänster'])
-        hit_col.write(row['Sökord'])
-        right_col.write(row['Kontext Höger'])
-
-
+            )
+        left_col.write(row["Kontext Vänster"])
+        hit_col.markdown(f"**{row['Sökord']}**")
+        right_col.write(row["Kontext Höger"])
 
     def write_row(self, i: int, row: pd.Series) -> None:
         (
@@ -162,7 +166,10 @@ class TableDisplay:
         )
         with link_col:
             st.write(
-                self.link.replace("protokoll", self.translate_protocol(row["Protokoll"])), unsafe_allow_html=True
+                self.link.replace(
+                    "protokoll", self.translate_protocol(row["Protokoll"])
+                ),
+                unsafe_allow_html=True,
             )
         with expander_col:
             st.button(
@@ -172,14 +179,19 @@ class TableDisplay:
                 args=(row["Protokoll"], speaker, row["År"]),
             )
 
-    def translate_gender(self, gender: str) -> str:
+    def translate_gender(self, gender: str, short: bool = False) -> str:
         if gender == "man":
+            if short:
+                return "M"
             return "Man"
         elif gender == "woman":
+            if short:
+                return "K"
             return "Kvinna"
         else:
+            if short:
+                return "?"
             return "Okänt"
-
 
     def get_columns(self) -> Any:
         return st.columns([2, 2, 2, 2, 3, 2])
@@ -197,17 +209,9 @@ class TableDisplay:
     def convert_df(_self, df: pd.DataFrame) -> bytes:
         return df.to_csv(index=False).encode("utf-8")
 
-    def add_download_button(self, data: pd.DataFrame, file_name: str) -> None:
-        st.download_button(
-            label="Ladda ner som csv",
-            data=self.convert_df(data),
-            file_name=file_name,
-            mime="text/csv",
-        )
-
-    def translate_protocol(self, protocol_name:str)->str:
-        split = protocol_name.split('-')
+    def translate_protocol(self, protocol_name: str) -> str:
+        split = protocol_name.split("-")
         chamber = split[3]
-        #chamber = chamber.replace('ak', 'Andra kammaren')
-        #chamber = chamber.replace('fk', 'Första kammaren')
+        # chamber = chamber.replace('ak', 'Andra kammaren')
+        # chamber = chamber.replace('fk', 'Första kammaren')
         return f'{chamber}  {split[5].split("_")[0]}'

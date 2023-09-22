@@ -11,6 +11,7 @@ import click
 
 st.set_page_config(
     page_title="SweDeb DEMO b",
+    layout="wide",
 )
 
 
@@ -30,6 +31,7 @@ def add_banner() -> None:
         with other_col:
             st.title("Svenska riksdagsdebatter")
 
+
 def set_swedish_for_selections() -> None:
     SELECT_TEXT = "Välj ett eller flera alternativ"
     multi_css = f"""
@@ -40,8 +42,8 @@ def set_swedish_for_selections() -> None:
     """
     st.markdown(multi_css, unsafe_allow_html=True)
 
-def add_meta_sidebar(api:ADummyApi) -> Any:
 
+def add_meta_sidebar(api: ADummyApi) -> Any:
     sidebar_container = st.sidebar.container()
     with sidebar_container:
         st.header("Filtrera sökresultat")
@@ -51,7 +53,7 @@ def add_meta_sidebar(api:ADummyApi) -> Any:
     return meta_search
 
 
-def add_tabs(meta_search:Any, api:ADummyApi, debug:bool) -> None:
+def add_tabs(meta_search: Any, api: ADummyApi, debug: bool) -> None:
     debug_tab = " "
     if debug:
         debug_tab = "Debug"
@@ -77,16 +79,16 @@ def add_tabs(meta_search:Any, api:ADummyApi, debug:bool) -> None:
     )
 
     with tab_WT:
-        WordTrendsDisplay(api, shared_meta=meta_search)
+        WordTrendsDisplay(api, shared_meta=meta_search, tab_key="WT")
 
     with tab_KWIC:
-        KWICDisplay(api, shared_meta=meta_search)
+        KWICDisplay(api, shared_meta=meta_search, tab_key="KWIC")
 
     with tab_NG:
         st.caption("Här kommer information om verktyget **N-gram**")
 
     with tab_whole_speeches:
-        FullSpeechDisplay(api, shared_meta=meta_search)
+        FullSpeechDisplay(api, shared_meta=meta_search, tab_key="SPEECH")
 
     with tab_topics:
         st.caption("Här kommer information om verktyget **Temamodeller**")
@@ -96,9 +98,13 @@ def add_tabs(meta_search:Any, api:ADummyApi, debug:bool) -> None:
         faq_expander = st.expander("FAQ")
         with faq_expander:
             st.write("Vad är detta?")
-            st.caption("En prototyp utvecklad för att undersöka möjligheterna med att tillgängliggöra riksdagsdebatter")
+            st.caption(
+                "En prototyp utvecklad för att undersöka möjligheterna med att tillgängliggöra riksdagsdebatter"
+            )
             st.write("Hur använder man den här prototypen?")
-            st.caption("I vänsterspalten kan du välja vilken data du vill undersöka. I de olika flikarna kan du välja vilket verktyg du vill använda för att undersöka materialet.")
+            st.caption(
+                "I vänsterspalten kan du välja vilken data du vill undersöka. I de olika flikarna kan du välja vilket verktyg du vill använda för att undersöka materialet."
+            )
     if debug:
         with tab_debug:
             st.caption("Session state:")
@@ -106,9 +112,13 @@ def add_tabs(meta_search:Any, api:ADummyApi, debug:bool) -> None:
 
 
 @click.command()
-@click.option('--env_file', default='.env_sample_data', help='Path to .env file with environment variables')
-@click.option('--debug', default=True, help='Show session state info in debug tab')
-def render_main_page(env_file:str, debug:bool)->None:
+@click.option(
+    "--env_file",
+    default=".env_sample_data",
+    help="Path to .env file with environment variables",
+)
+@click.option("--debug", default=True, help="Show session state info in debug tab")
+def render_main_page(env_file: str, debug: bool) -> None:
     dummy_api = ADummyApi(env_file)
     add_banner()
     set_swedish_for_selections()
@@ -116,6 +126,5 @@ def render_main_page(env_file:str, debug:bool)->None:
     add_tabs(meta_search, dummy_api, debug)
 
 
-
-if __name__ == '__main__':
-    render_main_page() # type: ignore
+if __name__ == "__main__":
+    render_main_page()  # type: ignore
