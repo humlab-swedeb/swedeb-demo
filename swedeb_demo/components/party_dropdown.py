@@ -3,7 +3,8 @@ from __future__ import annotations
 from typing import Iterable
 
 import streamlit as st
-from api.dummy_api import ADummyApi  # type: ignore
+
+from swedeb_demo.api.dummy_api import ADummyApi  # type: ignore
 
 
 class PartyDropDown:
@@ -11,6 +12,7 @@ class PartyDropDown:
         self.api = another_api
         self.party_to_id = self.api.party_specs
         self.id_to_party = {v: k for k, v in self.party_to_id.items()}
+        self.id_to_party[self.party_to_id["?"]] = "Partimetadata saknas"
         self.draw_selector()
 
     def draw_selector(self) -> None:
@@ -24,14 +26,14 @@ class PartyDropDown:
             key="party_dropdown",
         )
 
-    def generate_css_for_party_id(self, party_id: int, part_abbrev: str) -> str:
+    def generate_css_for_party_id(self, party_id: int, party_abbrev: str) -> str:
         color = self.api.party_id_to_color.get(party_id, "#000000")
         return f"""
-        span[data-baseweb="tag"][aria-label="{part_abbrev}, close by backspace"]{{
+        span[data-baseweb="tag"][aria-label="{party_abbrev}, close by backspace"]{{
             background-color: {color};
-        }}
-
-        """
+        }}"""
+       
+   
 
     def get_css_for_all(
         self, party_ids: Iterable[int], party_abbrevs: Iterable[str]

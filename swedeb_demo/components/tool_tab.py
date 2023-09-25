@@ -2,8 +2,10 @@ from typing import Any
 
 import pandas as pd
 import streamlit as st
-from api.dummy_api import ADummyApi  # type: ignore
-from components.meta_data_display import MetaDataDisplay  # type: ignore
+
+from swedeb_demo.api.dummy_api import ADummyApi  # type: ignore
+from swedeb_demo.components.meta_data_display import \
+    MetaDataDisplay  # type: ignore
 
 
 class ToolTab:
@@ -14,7 +16,6 @@ class ToolTab:
         self.search_display = shared_meta
         self.TAB_KEY = tab_key
         self.HITS_PER_PAGE = f"{self.TAB_KEY}_hits_per_page"
-
 
     def init_session_state(self, session_dict: dict) -> None:
         for k, v in session_dict.items():
@@ -38,23 +39,31 @@ class ToolTab:
     def display_settings_info(
         self, with_search_hits: bool = True, hits: str = ""
     ) -> None:
+        settings = self.search_display.get_current_settings()
         if with_search_hits:
+            searches = self.get_search_box()
             st.info(
-                f"Resultat för sökningen **_{self.get_search_box()}_** {hits}  \n{self.search_display.get_current_settings()}"
+
+                f"Resultat för sökningen **_{searches}_** {hits}  \n{settings}"
             )
         else:
             st.info(
-                f"Resultat för sökningen:  \n{self.search_display.get_current_settings()}"
+                f"Resultat för sökningen:  \n{settings}"
             )
 
     def display_settings_info_no_hits(self, with_search_hits: bool = True) -> None:
+        settings = self.search_display.get_current_settings()
+
         if with_search_hits:
             st.info(
-                f"Inga resultat för sökningen **_{self.get_search_box()}_**.  \n{self.search_display.get_current_settings()}  \nUtöka filtreringen eller försök med ett annat sökord för att få fler träffar."
+                f"Inga resultat för sökningen **_{self.get_search_box()}_**.  "
+                "\n{settings}  \n Utöka filtreringen eller försök med"
+                "ett annat sökord för att få fler träffar."
             )
         else:
             st.info(
-                f"Inga resultat för sökningen:  \n{self.search_display.get_current_settings()}.  \nUtöka filtreringen för att få fler träffar."
+                f"Inga resultat för sökningen:  \n{settings}.  \n"
+                "Utöka filtreringen för att få fler träffar."
             )
 
     def add_hit_selector(self, hits: list) -> Any:
@@ -68,7 +77,7 @@ class ToolTab:
 
     def draw_line(self) -> None:
         st.markdown(
-            """<hr style="height:2px;border:none;color:#111111;background-color:#111111;" /> """,
+            """<hr style="height:2px;border:none;color:#111111;background-color:#111111;" /> """,  # noqa: E501
             unsafe_allow_html=True,
         )
 
@@ -116,3 +125,16 @@ class ToolTab:
             key=f"search_button_{self.TAB_KEY}",
             on_click=self.handle_button_click,
         )
+
+    def add_sort_button(self, text, column_name):
+        st.button(
+            text,
+            key=f"sb_{column_name}_{self.TAB_KEY}",
+            on_click=self.set_sorting,
+            args=(column_name,),
+        )
+
+    def add_sort_buttons(self, texts, st_columns, column_names):
+        for text, st_col, col_name in zip(texts, st_columns, column_names):
+            with st_col:
+                self.add_sort_button(text, col_name)

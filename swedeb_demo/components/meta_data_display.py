@@ -3,11 +3,11 @@ from __future__ import annotations
 from typing import Any, Optional
 
 import streamlit as st
-from api.dummy_api import ADummyApi  # type: ignore
 
-from .gender_checkboxes import GenderCheckBoxes
-from .party_dropdown import PartyDropDown
-from .speaker_dropdown import SpeakerDropDown
+from swedeb_demo.api.dummy_api import ADummyApi  # type: ignore
+from swedeb_demo.components.gender_checkboxes import GenderCheckBoxes
+from swedeb_demo.components.party_dropdown import PartyDropDown
+from swedeb_demo.components.speaker_dropdown import SpeakerDropDown
 
 
 # tid, parti, kön, (kammare, valkrets), namn

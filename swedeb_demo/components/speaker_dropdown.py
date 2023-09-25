@@ -4,7 +4,8 @@ from typing import Any
 
 import pandas as pd
 import streamlit as st
-from api.dummy_api import ADummyApi  # type: ignore
+
+from swedeb_demo.api.dummy_api import ADummyApi  # type: ignore
 
 
 class SpeakerDropDown:
@@ -50,7 +51,9 @@ class SpeakerDropDown:
             birth_year = ""
         if (death_year := self.speakers.loc[x, "year_of_death"]) == 0:
             death_year = ""
-        return f'{self.speakers.loc[x, "name"]} ({self.speakers.loc[x, "party_abbrev"]}) {birth_year} {death_year}'
+        name = self.speakers.loc[x, "name"]
+        party = self.speakers.loc[x, "party_abbrev"]
+        return f'{name} ({party}) {birth_year} {death_year}'
 
     def get_selection(self) -> dict | None:
         if len(self.selector) == 0:
@@ -60,4 +63,5 @@ class SpeakerDropDown:
     def get_selected_speakers_string(self) -> str:
         if len(self.selector) == 0:
             return "Alla talare"
-        return f"**Valda talare**: {', '.join([self.format_speaker(x) for x in self.selector])}.\n"
+        selected = ', '.join([self.format_speaker(x) for x in self.selector])
+        return f"**Valda talare**: {selected}.\n"

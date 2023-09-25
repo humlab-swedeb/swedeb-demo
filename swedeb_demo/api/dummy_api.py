@@ -1,32 +1,35 @@
 from __future__ import annotations
+
 import os
+from typing import List, Mapping,  Union
 
 import pandas as pd
 import penelope.utility as pu  # type: ignore
+from ccc import Corpora, Corpus
 from dotenv import load_dotenv
 from penelope.common.keyness import KeynessMetric  # type: ignore
 from penelope.corpus import VectorizedCorpus  # type: ignore
 from penelope.utility import PropertyValueMaskingOpts  # type: ignore
-from ccc import Corpus, Corpora
 
-
-from .parlaclarin.trends_data import SweDebComputeOpts, SweDebTrendsData
-from .westac.riksprot.parlaclarin import codecs as md
-from .westac.riksprot.parlaclarin import speech_text as sr
-
-from typing import Union, Mapping, Tuple
-
+from swedeb_demo.api.parlaclarin.trends_data import (SweDebComputeOpts,
+                                                     SweDebTrendsData)
+from swedeb_demo.api.westac.riksprot.parlaclarin import codecs as md
+from swedeb_demo.api.westac.riksprot.parlaclarin import speech_text as sr
 
 
 class ADummyApi:
     """Dummy API for testing and developing the SweDeb GUI"""
 
-    def __init__(self, env_file: str = ".env_sample_docker") -> None:
+    def __init__(self, env_file: str = ".env_sample_docker", 
+                 corpus_dir = "/usr/local/share/cwb/registry/", 
+                 corpus_name="RIKSPROT_V090_TEST") -> None:
         load_dotenv(env_file)
         self.tag: str = os.getenv("TAG")
         self.folder = os.getenv("FOLDER")
         METADATA_FILENAME = os.getenv("METADATA_FILENAME")
         TAGGED_CORPUS_FOLDER = os.getenv("TAGGED_CORPUS_FOLDER")
+        self.corpus_dir = corpus_dir
+        self.corpus_name = corpus_name
 
         self.load_corpus()
         self.data: md.Codecs = md.Codecs().load(source=METADATA_FILENAME)
@@ -58,6 +61,10 @@ class ADummyApi:
         )
         self.kwic_corpus = self.load_kwic_corpus()
         self.words_per_year = self._set_words_per_year()
+    
+    def get_only_parties_with_data(self):
+        parties_in_data = self.corpus.document_index.party_id.unique()
+        return parties_in_data
 
     def _set_words_per_year(self) -> pd.DataFrame:
         data_year_series = self.corpus.document_index.groupby("year")[
@@ -69,8 +76,8 @@ class ADummyApi:
         return self.words_per_year
 
     def load_kwic_corpus(self) -> Corpus:
-        corpora: Corpora = Corpora(registry_dir="/usr/local/share/cwb/registry/")
-        corpus: Corpus = corpora.corpus(corpus_name="RIKSPROT_V090_TEST")
+        corpora: Corpora = Corpora(registry_dir=self.corpus_dir)
+        corpus: Corpus = corpora.corpus(corpus_name=self.corpus_name)
         return corpus
 
     def load_corpus(self) -> None:
@@ -79,7 +86,12 @@ class ADummyApi:
     def get_party_specs(self) -> Union[str, Mapping[str, int]]:
         for specification in self.data.property_values_specs:
             if specification["text_name"] == "party_abbrev":
-                return specification["values"]
+                specs = specification["values"]
+                selected = {}
+                for k, v in specs.items():
+                    if v in self.get_only_parties_with_data():
+                        selected[k] = v 
+                return selected
 
     def get_word_hits(self, search_term: str, n_hits: int = 5) -> list[str]:
         search_term = search_term.lower()
@@ -107,7 +119,8 @@ class ADummyApi:
 
         Args:
             words: list of strings (search terms)
-            corpus (VectorizedCorpus, optional): current corpus in None. Defaults to None.
+            corpus (VectorizedCorpus, optional): current corpus in None. 
+            Defaults to None.
 
         Returns:
             dict: key: search term, value: corpus column vector
@@ -129,7 +142,11 @@ class ADummyApi:
         return corpus
 
     def get_anforanden(
-        self, from_year: int, to_year: int, selections: dict, di_selected: pd.DataFrame = None
+        self,
+        from_year: int,
+        to_year: int,
+        selections: dict,
+        di_selected: pd.DataFrame = None,
     ) -> pd.DataFrame:
         """For getting a list of - and info about - the full 'Anföranden' (speeches)
 
@@ -195,18 +212,20 @@ class ADummyApi:
 
         return query[1:]
 
-    def get_query(self, search_terms, selection, prefix):
-        term_query = self.get_search_query_list(search_terms)
+    def get_query(self, search_terms, selection, lemmatized, prefix):
+        term_query = self.get_search_query_list(search_terms, lemmatized)
         if selection:
-            query = f"{prefix}:{term_query}::{self.get_query_from_selections(selection, prefix=prefix)}"
+            q = self.get_query_from_selections(selection, prefix=prefix)
+            query = f"{prefix}:{term_query}::{q}"
             return query
         return term_query
 
-    def get_search_query_list(self, search_terms):
+    def get_search_query_list(self, search_terms, lemmatized):
         # [lemma="information"] [lemma="om"]
+        search_setting = "lemma" if lemmatized else "word"
         query = ""
         for term in search_terms:
-            query += f' [lemma="{term}"]'
+            query += f' [{search_setting}="{term}"]'
         return query[1:]
 
     def rename_selection_keys(self, selections):
@@ -224,9 +243,10 @@ class ADummyApi:
         selections: dict,
         words_before: int,
         words_after: int,
+        lemmatized: bool,
     ) -> pd.DataFrame:
         selections = self.rename_selection_keys(selections)
-        query_str = self.get_query(search_hits, selections, prefix="a")
+        query_str = self.get_query(search_hits, selections, lemmatized, prefix="a")
         subcorpus = self.kwic_corpus.query(
             query_str, context_left=words_before, context_right=words_after
         )
@@ -310,7 +330,9 @@ class ADummyApi:
             return pd.DataFrame(), pd.DataFrame()
 
         trends_data: SweDebTrendsData = SweDebTrendsData(
-            corpus=self.corpus, person_codecs=self.person_codecs, n_top=1000000  # type: ignore
+            corpus=self.corpus, 
+            person_codecs=self.person_codecs, 
+            n_top=1000000  
         )
         pivot_keys = list(filter_opts.keys()) if filter_opts else []
 
@@ -375,7 +397,8 @@ class ADummyApi:
             col str: column name, possibly a gender
 
         Returns:
-            str: Swedish translation of column name if a gender, else the original column name
+            str: Swedish translation of column name if it represents a gender, 
+            else the original column name
         """
         new_col = col
         if "man" in col and "woman" not in col:
@@ -408,4 +431,8 @@ class ADummyApi:
 
 
 # speech:
-# (['speaker_note_id', 'who', 'u_id', 'paragraphs', 'num_tokens', 'num_words', 'page_number', 'page_number2', 'protocol_name', 'date', 'document_id', 'year', 'document_name', 'filename', 'n_tokens', 'n_utterances', 'speech_index', 'gender_id', 'party_id', 'office_type_id', 'sub_office_type_id', 'Adjective', 'Adverb', 'Conjunction', 'Delimiter'
+# (['speaker_note_id', 'who', 'u_id', 'paragraphs', 'num_tokens', 'num_words',
+#  'page_number', 'page_number2', 'protocol_name', 'date', 'document_id', 'year', 
+# 'document_name', 'filename', 'n_tokens', 'n_utterances', 'speech_index', 'gender_id', 
+# 'party_id', 'office_type_id', 'sub_office_type_id', 'Adjective', 'Adverb', 
+# 'Conjunction', 'Delimiter'

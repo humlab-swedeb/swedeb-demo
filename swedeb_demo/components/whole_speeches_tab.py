@@ -1,14 +1,15 @@
-from .tool_tab import ToolTab
-from .speech_display_mixin import ExpandedSpeechDisplay
 from typing import Any
 
 import pandas as pd
 import streamlit as st
-from api.dummy_api import ADummyApi  # type: ignore
-from components.meta_data_display import MetaDataDisplay  # type: ignore
 
-from .table_results import TableDisplay
-
+from swedeb_demo.api.dummy_api import ADummyApi  # type: ignore
+from swedeb_demo.components import component_texts as ct
+from swedeb_demo.components.meta_data_display import \
+    MetaDataDisplay  # type: ignore
+from swedeb_demo.components.speech_display_mixin import ExpandedSpeechDisplay
+from swedeb_demo.components.table_results import TableDisplay
+from swedeb_demo.components.tool_tab import ToolTab
 
 
 class FullSpeechDisplay(ExpandedSpeechDisplay, ToolTab):
@@ -17,10 +18,11 @@ class FullSpeechDisplay(ExpandedSpeechDisplay, ToolTab):
     ) -> None:
         super().__init__(another_api, shared_meta, tab_key)
 
+        self.labels = ct.sp_labels
+        self.column_names = ct.sp_col_names
         self.CURRENT_PAGE = f"current_page_{self.TAB_KEY}"
         self.SEARCH_PERFORMED = f"search_performed_{self.TAB_KEY}"
         self.EXPANDED_SPEECH = f"expanded_speech_{self.TAB_KEY}"
-        self.ROWS_PER_PAGE = f"rows_per_page_{self.TAB_KEY}"
         self.DATA_KEY = f"data_{self.TAB_KEY}"
         self.SORT_KEY = f"sort_key_{self.TAB_KEY}"
         self.ASCENDING_KEY = f"ascending_{self.TAB_KEY}"
@@ -33,7 +35,6 @@ class FullSpeechDisplay(ExpandedSpeechDisplay, ToolTab):
                 self.CURRENT_PAGE: 0,
                 self.SEARCH_PERFORMED: False,
                 self.EXPANDED_SPEECH: False,
-                self.ROWS_PER_PAGE: 5,
             }
             self.st_dict_when_button_clicked = {
                 self.CURRENT_PAGE: 0,
@@ -41,9 +42,7 @@ class FullSpeechDisplay(ExpandedSpeechDisplay, ToolTab):
                 self.EXPANDED_SPEECH: False,
             }
 
-            st.caption(
-                "Sök på hela anföranden. Välj tidsintervall, partier, kön och talare till vänster."
-            )
+            st.caption(ct.sp_desc)
             self.top_container = st.container()
             self.bottom_container = st.container()
 
@@ -52,13 +51,12 @@ class FullSpeechDisplay(ExpandedSpeechDisplay, ToolTab):
                 current_page_name=self.CURRENT_PAGE,
                 party_abbrev_to_color=self.api.party_abbrev_to_color,
                 expanded_speech_key=self.EXPANDED_SPEECH,
-                rows_per_table_key=self.ROWS_PER_PAGE,
-                table_type="source",
+                table_type=ct.sp_table_type,
                 data_key=self.DATA_KEY,
             )
 
             with self.top_container:
-                self.add_search_button("Visa anföranden")
+                self.add_search_button(ct.sp_search_button)
                 self.draw_line()
 
             self.init_session_state(session_state_initial_values)
@@ -97,54 +95,12 @@ class FullSpeechDisplay(ExpandedSpeechDisplay, ToolTab):
             _, col_right = st.columns([4, 2])
 
             with col_right:
-                self.add_hits_per_page(self.ROWS_PER_PAGE)
-                self.add_download_button(anforanden, "anforanden.csv")
+                self.add_download_button(anforanden, ct.sp_filename)
             self.draw_line()
 
-            (
-                speaker_col,
-                gender_col,
-                year_col,
-                party_col,
-                link_col,
-                expander_col,
-            ) = self.table_display.get_columns()
+            columns = self.table_display.get_columns()
 
-            with speaker_col:
-                st.button(
-                    "Talare↕",
-                    key="sort_button",
-                    on_click=self.set_sorting,
-                    args=("Talare",),
-                )
-            with gender_col:
-                st.button(
-                    "Kön↕",
-                    key="button könssortering",
-                    on_click=self.set_sorting,
-                    args=("Kön",),
-                )
-            with year_col:
-                st.button(
-                    "År↕",
-                    key="button årsortering",
-                    on_click=self.set_sorting,
-                    args=("År",),
-                )
-            with party_col:
-                st.button(
-                    "Parti↕",
-                    key="button partisortering",
-                    on_click=self.set_sorting,
-                    args=("Parti",),
-                )
-            with link_col:
-                st.button(
-                    "Källa↕",
-                    key="button protokollsortering",
-                    on_click=self.set_sorting,
-                    args=("Protokoll",),
-                )
+            self.add_sort_buttons(self.labels, columns, self.column_names)
 
             if self.SORT_KEY in st.session_state:
                 anforanden.sort_values(

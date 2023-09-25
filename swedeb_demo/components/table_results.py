@@ -1,5 +1,6 @@
 import math
 from typing import Any
+
 import pandas as pd
 import streamlit as st
 
@@ -11,22 +12,18 @@ class TableDisplay:
         current_page_name: str,
         party_abbrev_to_color: dict,
         expanded_speech_key: str,
-        rows_per_table_key: str,
         table_type: str,
         data_key: str,
     ) -> None:
         self.top_container = st.container()
         self.table_container = st.container()
         self.prev_next_container = st.container()
+
         self.current_container = current_container_key
         self.current_page_name = current_page_name
-        self.rows_per_table_key = rows_per_table_key
         self.table_type = table_type
         self.data_key = data_key
-
-        self.hits_per_page = 5  # st.session_state[f"{self.current_container}_hits"]
-        if rows_per_table_key in st.session_state:
-            self.hits_per_page = st.session_state[rows_per_table_key]
+        self.hits_per_page = st.session_state["hits_per_page_all"]
         self.type = type
         dummy_pdf = "https://www.riksdagen.se/sv/sok/?avd=dokument&doktyp=prot"
         self.link = f"[protokoll]({dummy_pdf})"
@@ -96,6 +93,8 @@ class TableDisplay:
             self.write_kwic_row(i, row)
 
     def get_party_with_color(self, party: str) -> str:
+        if party == "?":
+            return "Metadata saknas"
         if party in self.party_colors:
             color = self.party_colors[party]
             return f'<p style="color:{color}";>{party}</p>'
@@ -108,8 +107,7 @@ class TableDisplay:
         st.session_state["selected_year"] = year
 
     def get_kwick_columns(self) -> Any:
-        return st.columns([2, 2, 2, 2, 1, 2, 3])
-
+        return st.columns([3, 3, 3, 2, 2, 2, 2, 2])
 
     def write_kwic_row(self, i: int, row: pd.Series) -> None:
         (
@@ -119,27 +117,21 @@ class TableDisplay:
             party_col,
             year_col,
             speaker_col,
-            # gender_col,
+            gender_col,
             prot_col,
             # expander_col,
         ) = self.get_kwick_columns()
         # gender_col.write(self.translate_gender(["Kön"], short=True))
-        speaker = "Okänd" if row["Talare"] == "" else row["link"]
+        speaker = "Metadata saknas" if row["Talare"] == "" else row["link"]
         speaker_col.write(speaker)
         party_col.markdown(
             self.get_party_with_color(row["Parti"]), unsafe_allow_html=True
         )
-        # with prot_col:
-        #    st.write(
-        #        self.link.replace(
-        #            "protokoll", self.translate_protocol(row["Protokoll"])
-        #        ),
-        #        unsafe_allow_html=True,
-        #    )
+
         year_col.write(str(row["År"]))
         with prot_col:
             st.button(
-                f"Anförande",  # {row['Protokoll']}
+                "Visa", 
                 key=f"{self.current_container}_b_{i}",
                 on_click=self.update_speech_state,
                 args=(row["Protokoll"], speaker, row["År"]),
@@ -147,6 +139,7 @@ class TableDisplay:
         left_col.write(row["Kontext Vänster"])
         hit_col.markdown(f"**{row['Sökord']}**")
         right_col.write(row["Kontext Höger"])
+        gender_col.write(self.translate_gender(row["Kön"], short=True))
 
     def write_row(self, i: int, row: pd.Series) -> None:
         (
@@ -158,7 +151,7 @@ class TableDisplay:
             expander_col,
         ) = self.get_columns()
         gender_col.write(self.translate_gender(row["Kön"]))
-        speaker = "Okänd" if row["Talare"] == "" else row["link"]
+        speaker = "Metadata saknas" if row["Talare"] == "" else row["link"]
         speaker_col.write(speaker)
         year_col.write(str(row["År"]))
         party_col.markdown(
@@ -212,6 +205,6 @@ class TableDisplay:
     def translate_protocol(self, protocol_name: str) -> str:
         split = protocol_name.split("-")
         chamber = split[3]
-        # chamber = chamber.replace('ak', 'Andra kammaren')
-        # chamber = chamber.replace('fk', 'Första kammaren')
+        chamber = chamber.replace('ak', 'Andra kammaren')
+        chamber = chamber.replace('fk', 'Första kammaren')
         return f'{chamber}  {split[5].split("_")[0]}'
