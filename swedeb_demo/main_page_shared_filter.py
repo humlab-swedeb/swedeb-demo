@@ -93,6 +93,11 @@ def add_tabs(meta_search: Any, api: ADummyApi, debug: bool) -> None:
         ]
     )
 
+    def get_debug_speech(protocoll, tab) -> None:
+        with tab:
+            st.write(api.get_speech(protocoll))
+    
+
     with tab_WT:
         WordTrendsDisplay(api, shared_meta=meta_search, tab_key=ct.m_wt_tab)
 
@@ -120,6 +125,10 @@ def add_tabs(meta_search: Any, api: ADummyApi, debug: bool) -> None:
         with tab_debug:
             st.caption("Session state:")
             st.write(st.session_state)
+            st.text_input("Protokollsök", key="speech_finder")
+            st.button("visa protokoll", key="speech_finder_button", 
+                      on_click=get_debug_speech, 
+                      args=(st.session_state["speech_finder"],tab_debug))
 
 
 @click.command()

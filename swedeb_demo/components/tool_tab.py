@@ -57,7 +57,7 @@ class ToolTab:
         if with_search_hits:
             st.info(
                 f"Inga resultat för sökningen **_{self.get_search_box()}_**.  "
-                "\n{settings}  \n Utöka filtreringen eller försök med"
+                f"\n{settings}  \n Utöka filtreringen eller försök med"
                 "ett annat sökord för att få fler träffar."
             )
         else:

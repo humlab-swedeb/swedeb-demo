@@ -229,7 +229,8 @@ class ADummyApi:
         return query[1:]
 
     def rename_selection_keys(self, selections):
-        renames = {"gender_id": "speech_gender_id", "party_id": "speech_party_id"}
+        renames = {"gender_id": "speech_gender_id", "party_id": "speech_party_id",
+                    "who":"speech_who"}
         for key, value in renames.items():
             if key in selections:
                 selections[value] = selections.pop(key)

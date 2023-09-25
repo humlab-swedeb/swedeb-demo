@@ -207,4 +207,4 @@ class TableDisplay:
         chamber = split[3]
         chamber = chamber.replace('ak', 'Andra kammaren')
         chamber = chamber.replace('fk', 'Första kammaren')
-        return f'{chamber}  {split[5].split("_")[0]}'
+        return  protocol_name #f'{chamber}  {split[5].split("_")[0]}'

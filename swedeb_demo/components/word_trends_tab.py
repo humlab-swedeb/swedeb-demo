@@ -121,6 +121,7 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
         )
 
     @st.cache_data
+    
     def get_data(
         _self,
         search_words: List[str],
@@ -128,6 +129,7 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
         end_year: int,
         selections: dict,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        st.session_state['word_trend_selections'] = selections
         return _self.api.get_word_trend_results(
             search_words,
             filter_opts=selections,
