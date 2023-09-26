@@ -19,6 +19,7 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
         super().__init__(another_api, shared_meta, tab_key)
         self.labels = ct.kwic_labels
         self.column_names = ct.kwic_col_names
+        self.add_containers()
 
         self.CURRENT_PAGE = f"current_page_{self.TAB_KEY}"
         self.SEARCH_PERFORMED = f"search_performed__{self.TAB_KEY}"
@@ -37,7 +38,6 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
                 self.get_reset_dict(), self.api, self.TAB_KEY, search_terms=None
             )
         else:
-            self.add_containers()
             self.define_displays()
 
             with self.top_container:
@@ -48,6 +48,7 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
                 self.show_display()
 
     def draw_search_settings(self):
+        
         st.text_input(ct.kwic_text_input, key=self.SEARCH_BOX)
         self.add_window_size()
         self.add_lemma_word_toggle()
@@ -77,8 +78,12 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
         }
 
     def handle_button_click(self) -> None:
-        if not self.handle_search_click(self.get_st_dict_when_button_clicked()):
+        if st.session_state[self.SEARCH_BOX] == "":
             st.session_state[self.SEARCH_PERFORMED] = False
+            with self.result_container:
+                st.warning("Fyll i en sökterm")
+        else:
+            self.handle_search_click(self.get_st_dict_when_button_clicked())
 
     def add_window_size(self) -> None:
         cols_before, cols_after, _ = st.columns([2, 2, 2])
@@ -111,11 +116,9 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
             self.SEARCH_PERFORMED: True,
             self.CURRENT_PAGE: st.session_state[self.CURRENT_PAGE],
             self.EXPANDED_SPEECH: False,
+            self.SEARCH_BOX: st.session_state[self.SEARCH_BOX],
+            self.LEMMA_WORD_TOGGLE : st.session_state[self.LEMMA_WORD_TOGGLE]
         }
-        if self.SEARCH_BOX in st.session_state:
-            reset[self.SEARCH_BOX] = st.session_state[self.SEARCH_BOX]
-        else:
-            reset[self.SEARCH_BOX] = self.get_search_box()  # obs
 
         return reset
 

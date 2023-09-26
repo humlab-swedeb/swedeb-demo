@@ -99,8 +99,11 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
         return ""
 
     def handle_button_click(self) -> None:
-        if not self.handle_search_click(self.st_dict_when_button_clicked):
+        if self.get_search_box().strip() == "":
+            st.warning("Fyll i en sökterm")
             st.session_state[self.SEARCH_PERFORMED] = False
+        else:
+            self.handle_search_click(self.st_dict_when_button_clicked)
 
     def define_displays(self) -> None:
         self.table_display_table = TableDisplay(

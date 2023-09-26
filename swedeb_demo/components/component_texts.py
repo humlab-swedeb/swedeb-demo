@@ -65,8 +65,8 @@ frekvens: antal förekomster av söktermen delat med totalt antal ord i tal
 under samma år."""
 
 # word trends table display
-wt_table_labels = ["Talare↕", "Kön↕", "År↕", "Parti↕", "Källa↕"]
-wt_column_names = ["Talare", "Kön", "År", "Parti", "Protokoll"]
+wt_table_labels = ["Talare↕", "Kön↕", "År↕", "Parti↕", "Källa↕", "Träff↕"]
+wt_column_names = ["Talare", "Kön", "År", "Parti", "Protokoll", "hit"]
 
 # word trends plot settings
 wt_plot_markers = ["circle", "hourglass", "x", "cross", "square", 5]

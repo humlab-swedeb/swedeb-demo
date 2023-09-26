@@ -130,6 +130,12 @@ def add_tabs(meta_search: Any, api: ADummyApi, debug: bool) -> None:
                       on_click=get_debug_speech, 
                       args=(st.session_state["speech_finder"],tab_debug))
 
+def do_render(env_file: str, debug: bool, corpus_dir, corpus_name) -> None:
+    dummy_api = ADummyApi(env_file, corpus_dir, corpus_name)
+    add_banner()
+    set_swedish_for_selections()
+    meta_search = add_meta_sidebar(dummy_api)
+    add_tabs(meta_search, dummy_api, debug)
 
 @click.command()
 @click.option(
@@ -147,11 +153,7 @@ def add_tabs(meta_search: Any, api: ADummyApi, debug: bool) -> None:
 )
 
 def render_main_page(env_file: str, debug: bool, corpus_dir, corpus_name) -> None:
-    dummy_api = ADummyApi(env_file, corpus_dir, corpus_name)
-    add_banner()
-    set_swedish_for_selections()
-    meta_search = add_meta_sidebar(dummy_api)
-    add_tabs(meta_search, dummy_api, debug)
+    do_render(env_file, debug, corpus_dir, corpus_name)
 
 
 if __name__ == "__main__":

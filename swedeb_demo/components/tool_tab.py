@@ -28,23 +28,20 @@ class ToolTab:
         return st.session_state[f"search_box_{self.TAB_KEY}"]
 
     def handle_search_click(self, st_dict_when_button_clicked: dict) -> bool:
-        if self.get_search_box() != "":
-            for k, v in st_dict_when_button_clicked.items():
-                st.session_state[k] = v
-            return True
-        else:
-            st.warning("Fyll i en sökterm")
-            return False
+      
+        for k, v in st_dict_when_button_clicked.items():
+            st.session_state[k] = v
+
 
     def display_settings_info(
         self, with_search_hits: bool = True, hits: str = ""
     ) -> None:
         settings = self.search_display.get_current_settings()
         if with_search_hits:
-            searches = self.get_search_box()
+            searches = f'"{self.get_search_box()}"'
             st.info(
 
-                f"Resultat för sökningen **_{searches}_** {hits}  \n{settings}"
+                f"Resultat för sökningen **{searches}** {hits}  \n{settings}"
             )
         else:
             st.info(
@@ -53,10 +50,10 @@ class ToolTab:
 
     def display_settings_info_no_hits(self, with_search_hits: bool = True) -> None:
         settings = self.search_display.get_current_settings()
-
+        searches = f'"{self.get_search_box()}"'
         if with_search_hits:
             st.info(
-                f"Inga resultat för sökningen **_{self.get_search_box()}_**.  "
+                f"Inga resultat för sökningen **{searches}**.  "
                 f"\n{settings}  \n Utöka filtreringen eller försök med"
                 "ett annat sökord för att få fler träffar."
             )

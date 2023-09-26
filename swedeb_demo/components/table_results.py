@@ -148,8 +148,10 @@ class TableDisplay:
             year_col,
             party_col,
             link_col,
+            hit_col,
             expander_col,
         ) = self.get_columns()
+        hit_col.write(row["hit"])
         gender_col.write(self.translate_gender(row["Kön"]))
         speaker = "Metadata saknas" if row["Talare"] == "" else row["link"]
         speaker_col.write(speaker)
@@ -187,7 +189,7 @@ class TableDisplay:
             return "Okänt"
 
     def get_columns(self) -> Any:
-        return st.columns([2, 2, 2, 2, 3, 2])
+        return st.columns([2, 2, 2, 2, 3, 2, 1])
 
     def increase_page(self) -> None:
         st.session_state[self.current_page_name] += 1
