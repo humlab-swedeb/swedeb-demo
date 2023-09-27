@@ -114,13 +114,8 @@ def add_tabs(meta_search: Any, api: ADummyApi, debug: bool) -> None:
         st.caption(ct.m_topics_caption)
 
     with tab_about:
-        st.write(ct.m_about_caption)
-        faq_expander = st.expander(ct.m_faq)
-        with faq_expander:
-            st.write(ct.m_faq_Q1)
-            st.caption(ct.m_faq_A1)
-            st.write(ct.m_faq_Q2)
-            st.caption(ct.m_faq_A2)
+        st.markdown(ct.m_about_caption, unsafe_allow_html=True)
+
     if debug:
         with tab_debug:
             st.caption("Session state:")

@@ -129,8 +129,8 @@ m_hits_options = [5, 10, 20, 50]
 m_kwic_tab = "KWIC"
 m_wt_tab = "WT"
 m_sp_tab = "SPEECH"
-m_ngram_caption ="""Under utveckling. I den färdiga versionen kommer det gå att utforska 
-olika fraser, dess frekvenser och kontexter."""
+m_ngram_caption ="""Under utveckling. I den färdiga versionen kommer det gå att 
+utforska olika fraser, dess frekvenser och kontexter."""
 m_topics_caption = """Under utveckling. I den färdiga versionen kommer det gå att 
 utforska olika temamodeller (eng ”topic models”) och t ex följa teman över tid och 
 dess relation till varandra."""
@@ -152,8 +152,8 @@ f"som finansieras av Umeå universitet (2023–2024) och utvecklas av {humlab} �
 "använda för att utforska alla riksdagsanföranden från 1867 och framåt. " 
 "Det färdiga gränssnittet ska lanseras i slutet av 2024.\n\n"
 "Det underliggande datasetet till SweDeb (dvs riksdagsanförandena) hämtas "
-f"från det RJ-finansierade infrastrukturprojektet {swerik}, vars syfte bl a är att (1) " 
-"skapa " 
+f"från det RJ-finansierade infrastrukturprojektet {swerik}, vars syfte bl a "
+"är att (1) skapa " 
 "en databas med alla riksdagsledamöter sedan 1867, (2) annotera kammarens protokoll " 
 "och märka upp alla enskilda anföranden för att sedan (3) koppla samman "
 "varje anförande med aktuell ledamot.\n\n"
