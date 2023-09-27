@@ -35,7 +35,7 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
         self.DATA_KEY_SOURCE = f"data_source_{self.TAB_KEY}"
         self.SEARCH_BOX = f"search_box_{self.TAB_KEY}"
         self.words_per_year = self.api.get_words_per_year()
-        self.NON_NORMALIZED = "Frekvens"
+        self.NON_NORMALIZED = "Absolut frekvens"
         self.NORMALIZED = "Normaliserad frekvens"
         self.ANFORANDEN = ct.wt_option_anforanden
         self.TABELL = ct.wt_option_tabell
@@ -48,6 +48,7 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
                 self.TAB_KEY,
                 self.get_search_terms(),
             )
+        
         else:
             st.caption(ct.word_trend_desc)
 
@@ -133,13 +134,14 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
         selections: dict,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         st.session_state['word_trend_selections'] = selections
-        return _self.api.get_word_trend_results(
+        res = _self.api.get_word_trend_results(
             search_words,
             filter_opts=selections,
             start_year=start_year,
             end_year=end_year,
         )
-
+        res[0]['Totalt'] = res[0].sum(axis=1)
+        return res
     def normalize_word_per_year(self, data: pd.DataFrame) -> pd.DataFrame:
         data = data.merge(self.words_per_year, left_index=True, right_index=True)
         data = data.iloc[:, :].div(data.n_raw_tokens, axis=0)
@@ -234,7 +236,7 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
                 self.add_anforande_display(kwic_like_data)
 
     def add_anforande_display(self, kwic_like_data):
-        st_columns = self.table_display.get_columns()
+        st_columns = self.table_display.get_columns(include_hit=True)
         self.add_sort_buttons(self.labels, st_columns[:-1], self.column_names)
 
         with st_columns[-1]:

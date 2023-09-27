@@ -121,11 +121,15 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
         }
 
         return reset
+    
 
     def show_display(self) -> None:
         hit = self.get_search_box()
         if hit:
-            hits = [h.strip() for h in hit.split(" ")]
+            st.write(st.session_state[self.LEMMA_WORD_TOGGLE])
+            hits = [h.strip().lower() for h in hit.split(" ")]
+            if not self.has_and_is(self.LEMMA_WORD_TOGGLE):
+                hits = [h.lower() for h in hit.split(" ")]
             self.show_hit(hits)
         else:
             self.display_settings_info_no_hits()

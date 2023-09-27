@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "swedeb-explorer"
-version = "0.1.1"
+version = "0.1.4"
 description = "Swedish parliamentary debate explorer"
 authors = ["roger-mahler <roger.mahler@hotmail.com>"]
 readme = "README.md"

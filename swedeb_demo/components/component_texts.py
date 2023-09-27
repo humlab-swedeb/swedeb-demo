@@ -1,10 +1,11 @@
 ######################
 # KWIC display texts #
 ######################
-kwic_desc = """Med verktyget **Key Words in Context** kan du söka på ord och fraser, 
-t.ex.\`information` eller `information om`. För att få fler träffar kan `.*` användas, 
-t.ex. `.*information.*`. Under Filtrera sökresultatet kan du avgränsa sökningen 
-till vissa partier, talare eller år. """
+kwic_desc = """Med verktyget **Key Words in Context** kan du söka på ord och fraser, 
+t ex `information` eller `information om`, och se kontexten till vänster och 
+höger om sökningen. För att få fler träffar kan `.*` användas, 
+t ex `information.*`. Under Filtrera sökresultatet kan du avgränsa 
+anförandena till vissa partier, talare eller år. """
 kwic_lemma_toggle = "Exakt match (ej lemmatiserat)"
 kwic_word_before = "Antal ord före sökordet"
 kwic_words_after = "Antal ord efter sökordet"
@@ -38,10 +39,11 @@ kwic_show_speeches = "Visa anföranden"
 # WORD TRENDs display texts   #
 ###############################
 
-word_trend_desc = """Sök på ett begrepp för att se hur det använts över tid. För att 
- söka på flera termer, skriv dem med kommatecken, t.ex. `debatt,information`. Sök med 
- `*` för att få fler varianter, t.ex. `debatt*`. Välj vilka talare ska ingå i 
- filtreringen till vänster."""
+word_trend_desc = """Sök på ett eller flera ord för att se hur de har använts över tid. 
+För att söka på flera ord särskilj med kommatecken, t ex `debatt,information`. 
+Sök med `*` för att få fler varianter, t.ex. `debatt*`. Under Filtrera sökresultatet 
+kan du avgränsa anförandena till vissa partier, talare eller år. Observera att denna 
+test-korpus är lemmatiserad, dvs sökresultateten baseras på ordets grammatiska rot."""
 
 # word trends table/plot/speeches
 wt_table_type = "table"
@@ -83,7 +85,8 @@ wt_filename = "word_trends.csv"
 ###############################
 
 sp_desc = (
-    "Sök på hela anföranden. Välj tidsintervall, partier, kön och talare till vänster."
+    """Sök på hela anföranden. Under Filtrera sökresultatet kan du avgränsa anförandena
+      till vissa partier, talare eller år."""
 )
 
 # speeches table
@@ -109,7 +112,7 @@ m_title = "Svenska riksdagsdebatter"
 # corpus selectbox
 m_corpus_selectbox = "Välj korpus"
 m_corpus_selectbox_help = "Välj vilket korpus du vill arbeta med"
-m_corpus_selectbox_options = ["Riksdagsdebatter, 1960-1969"]
+m_corpus_selectbox_options = ["Riksdagsanföranden 1960–1969, lemmatiserade"]
 
 # meta sidebar settings
 m_meta_header = "Filtrera sökresultat"
@@ -126,19 +129,36 @@ m_hits_options = [5, 10, 20, 50]
 m_kwic_tab = "KWIC"
 m_wt_tab = "WT"
 m_sp_tab = "SPEECH"
-m_ngram_caption = "Här kommer information om verktyget **N-gram**"
-m_topics_caption = "Här kommer information om verktyget **Temamodeller**"
+m_ngram_caption ="""Under utveckling. I den färdiga versionen kommer det gå att utforska 
+olika fraser, dess frekvenser och kontexter."""
+m_topics_caption = """Under utveckling. I den färdiga versionen kommer det gå att 
+utforska olika temamodeller (eng ”topic models”) och t ex följa teman över tid och 
+dess relation till varandra."""
 
 # about tab
-m_about_caption = "Här kommer information om SweDebprojektet och verktygen"
-m_faq = "FAQ"
-m_faq_Q1 = "Vad är detta?"
-m_faq_A1 = """En prototyp utvecklad för att undersöka möjligheterna med att 
-tillgängliggöra riksdagsdebatter"""
-m_faq_Q2 = "Hur använder man den här prototypen?"
-m_faq_A2 = """I vänsterspalten kan du välja vilken data du vill undersöka. 
-I de olika flikarna kan du välja vilket verktyg du vill använda 
-för att undersöka materialet."""
+
+humlab_link = "https://www.umu.se/humlab/"
+humlab = f"[Humlab]({humlab_link})"
+swerik_link = "https://swerik-project.github.io"
+swerik = f"[Swerik]({swerik_link})"
+fredrik_link = "https://mau.se/personer/fredrik.noren/"
+fredrik = f"[Fredrik Mohammadi Norén]({fredrik_link})"
+
+m_about_caption = ("SweDeb (Swedish Parliamentary Debates) är ett infrastrukturprojekt" 
+
+f"som finansieras av Umeå universitet (2023–2024) och utvecklas av {humlab} –"
+"universitetets center för digital humaniora. Syftet med SweDeb är att ta " 
+"fram ett användarvänligt gränssnitt som forskare och studenter kan " 
+"använda för att utforska alla riksdagsanföranden från 1867 och framåt. " 
+"Det färdiga gränssnittet ska lanseras i slutet av 2024.\n\n"
+"Det underliggande datasetet till SweDeb (dvs riksdagsanförandena) hämtas "
+f"från det RJ-finansierade infrastrukturprojektet {swerik}, vars syfte bl a är att (1) " 
+"skapa " 
+"en databas med alla riksdagsledamöter sedan 1867, (2) annotera kammarens protokoll " 
+"och märka upp alla enskilda anföranden för att sedan (3) koppla samman "
+"varje anförande med aktuell ledamot.\n\n"
+f"För frågor om SweDeb eller Swerik kontakta projektledare {fredrik} ")
+
 
 
 ###############################

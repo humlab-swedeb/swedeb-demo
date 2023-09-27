@@ -85,7 +85,7 @@ class TableDisplay:
 
     def display_partial_source(self, current_df: pd.DataFrame) -> None:
         for i, row in current_df.iterrows():
-            self.write_row(i, row)
+            self.write_wt_row(i, row)
         # self.add_download_button(current_df, "anforanden.csv")
 
     def display_partial_kwic(self, current_df: pd.DataFrame) -> None:
@@ -141,8 +141,9 @@ class TableDisplay:
         right_col.write(row["Kontext Höger"])
         gender_col.write(self.translate_gender(row["Kön"], short=True))
 
-    def write_row(self, i: int, row: pd.Series) -> None:
-        (
+    def write_wt_row(self, i: int, row: pd.Series) -> None:
+        if 'hit' in row:
+            (
             speaker_col,
             gender_col,
             year_col,
@@ -150,8 +151,19 @@ class TableDisplay:
             link_col,
             hit_col,
             expander_col,
-        ) = self.get_columns()
-        hit_col.write(row["hit"])
+        ) = self.get_columns(include_hit=True)
+            hit_col.write(row["hit"])
+        else:
+            (
+                speaker_col,
+                gender_col,
+                year_col,
+                party_col,
+                link_col,
+                expander_col,
+            ) = self.get_columns(include_hit=False)
+
+            
         gender_col.write(self.translate_gender(row["Kön"]))
         speaker = "Metadata saknas" if row["Talare"] == "" else row["link"]
         speaker_col.write(speaker)
@@ -188,8 +200,11 @@ class TableDisplay:
                 return "?"
             return "Okänt"
 
-    def get_columns(self) -> Any:
-        return st.columns([2, 2, 2, 2, 3, 2, 1])
+    def get_columns(self, include_hit=False) -> Any:
+        if include_hit:
+            return st.columns([2, 2, 2, 2, 3, 2, 1])
+        else:
+            return st.columns([2, 2, 2, 2, 3, 1])
 
     def increase_page(self) -> None:
         st.session_state[self.current_page_name] += 1
@@ -209,4 +224,6 @@ class TableDisplay:
         chamber = split[3]
         chamber = chamber.replace('ak', 'Andra kammaren')
         chamber = chamber.replace('fk', 'Första kammaren')
-        return  protocol_name #f'{chamber}  {split[5].split("_")[0]}'
+        year = split[1]
+        #return  protocol_name.split('_')[0] + ":" + chamber
+        return f"{chamber} {year}:{split[5].split('_')[0]}"
