@@ -5,7 +5,8 @@ kwic_desc = """Med verktyget **Key Words in Context** kan du söka på ord och 
 t ex `information` eller `information om`, och se kontexten till vänster och 
 höger om sökningen. För att få fler träffar kan `.*` användas, 
 t ex `information.*`. Under Filtrera sökresultatet kan du avgränsa 
-anförandena till vissa partier, talare eller år. """
+anförandena till vissa partier, talare eller år. Observera att denna test-korpus är 
+lemmatiserad, dvs sökresultateten baseras på ordets grammatiska rot."""
 kwic_lemma_toggle = "Exakt match (ej lemmatiserat)"
 kwic_word_before = "Antal ord före sökordet"
 kwic_words_after = "Antal ord efter sökordet"

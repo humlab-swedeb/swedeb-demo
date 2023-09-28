@@ -61,8 +61,9 @@ class FullSpeechDisplay(ExpandedSpeechDisplay, ToolTab):
 
             self.init_session_state(session_state_initial_values)
 
-            if st.session_state[self.SEARCH_PERFORMED]:
-                self.show_display()
+        if st.session_state[self.SEARCH_PERFORMED] and \
+            not self.has_and_is(self.EXPANDED_SPEECH):
+            self.show_display()
 
     def handle_button_click(self) -> None:
         for k, v in self.st_dict_when_button_clicked.items():

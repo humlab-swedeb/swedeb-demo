@@ -71,8 +71,9 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
 
                 self.add_search_button(ct.wt_search_button)
 
-            if st.session_state[self.SEARCH_PERFORMED]:
-                self.show_display()
+        if st.session_state[self.SEARCH_PERFORMED] and \
+            not self.has_and_is(self.EXPANDED_SPEECH):
+            self.show_display()
 
     def get_initial_values(self):
         session_state_initial_values = {
@@ -140,7 +141,8 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
             start_year=start_year,
             end_year=end_year,
         )
-        res[0]['Totalt'] = res[0].sum(axis=1)
+        if res[0].shape[1] > 1:
+            res[0]['Totalt'] = res[0].sum(axis=1)
         return res
     def normalize_word_per_year(self, data: pd.DataFrame) -> pd.DataFrame:
         data = data.merge(self.words_per_year, left_index=True, right_index=True)
