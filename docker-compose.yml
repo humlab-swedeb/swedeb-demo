@@ -1,10 +1,29 @@
 version: "3"
 services:
   swedeb:
-    build: ./docker
+    #build: ./mounts/data/docker/
+    image: swedeb-demo:latest
+    container_name: swedeb-demo
     restart: unless-stopped
     ports:
       - 8501:8501
     volumes:
-      - ./mounts/app/swedeb-demo/swedeb_demo/:/app
-      - ./mounts/app/sample-data/data/dataset-01/v0.6.0:/app/sample_data   
+      - "/mnt/data-spinn/prototype.swedeb.se/mounts/data:/data"
+      # - "/etc/group:/etc/group:ro"
+      # - "/etc/passwd:/etc/passwd:ro"
+      # - "/etc/shadow:/etc/shadow:ro"
+      # - "/etc/pam.d:/etc/pam.d"
+    environment:
+      - SWEDEB_UID=1021
+      - SWEDEB_GID=1021
+      - SWEDEB_ENV_FILENAME=/app/.env
+      - SWEDEB_DEBUG=False
+      - SWEDEB_CWB_REGISTRY=/data/registry
+      - SWEDEB_CWB_DATABASE=RIKSPROT_V090_TEST
+      - DATA_DIR=/data/corpora/decade-1960/v0.9.0/
+      - METADATA_FILENAME=/data/corpora/decade-1960/v0.9.0/riksprot_metadata.db
+      - TAGGED_CORPUS_FOLDER=/data/corpora/decade-1960/v0.9.0/tagged_frames
+      - FOLDER=/data/corpora/decade-1960/v0.9.0/dtm/lemma
+      - TAG=lemma
+    # env_file:
+    #   - .env
