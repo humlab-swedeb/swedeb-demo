@@ -16,10 +16,7 @@ from swedeb_demo.components.whole_speeches_tab import \
 from swedeb_demo.components.word_trends_tab import \
     WordTrendsDisplay  # type: ignore
 
-st.set_page_config(
-    page_title="SweDeb DEMO b",
-    layout="wide",
-)
+
 
 
 def add_banner() -> None:
@@ -158,4 +155,8 @@ def render_main_page(env_file: str, debug: bool, corpus_dir, corpus_name) -> Non
 
 
 if __name__ == "__main__":
+    st.set_page_config(
+    page_title="SweDeb DEMO b",
+    layout="wide",
+    )
     render_main_page()  # type: ignore
