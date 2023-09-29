@@ -46,7 +46,7 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
                 self.get_reset_dict(),
                 self.api,
                 self.TAB_KEY,
-                self.get_search_terms(),
+                st.session_state['selected_hit'],
             )
         
         else:
@@ -141,9 +141,14 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
             start_year=start_year,
             end_year=end_year,
         )
+
         if res[0].shape[1] > 1:
             res[0]['Totalt'] = res[0].sum(axis=1)
+        res[0].reset_index(inplace=True)
+        res[0].rename(columns={"year": "År"}, inplace=True)
+        res[0].set_index(res[0].columns[0], inplace=True)
         return res
+    
     def normalize_word_per_year(self, data: pd.DataFrame) -> pd.DataFrame:
         data = data.merge(self.words_per_year, left_index=True, right_index=True)
         data = data.iloc[:, :].div(data.n_raw_tokens, axis=0)
@@ -175,14 +180,20 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
                 if kwic_like_data.empty:
                     self.display_settings_info_no_hits()
                 else:
-                    self.display_settings_info(hits=f": {', '.join(hits)}")
+                    self.display_settings_info(n_hits=len(kwic_like_data), 
+                                               hits=f": {', '.join(hits)}")
 
-                    col_display_select, _, col_page_select = st.columns([2, 1, 1])
+                    col_display_select, down_col_a, down_col_b = st.columns([2, 1, 1])
                     with col_display_select:
                         self.add_radio_buttons()
-                    self.add_download_button(data, ct.wt_filename)
+                    with down_col_a:
+                        st.write("")
+                        self.add_download_button(data, ct.wt_filename, button_label="Ladda ner ordfrekvenser", index=True)
+                    with down_col_b:
+                        st.write("")
+                        self.add_download_button(kwic_like_data, ct.wt_filename_speeches, button_label="Ladda ner anföranden")
                     self.draw_line()
-                    self.display_results(data, kwic_like_data, col_page_select)
+                    self.display_results(data, kwic_like_data)
         else:
             self.display_settings_info_no_hits(self)
 
@@ -222,7 +233,7 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
         return data
 
     def display_results(
-        self, data: pd.DataFrame, kwic_like_data: pd.DataFrame, col_page_select: Any
+        self, data: pd.DataFrame, kwic_like_data: pd.DataFrame
     ) -> None:
         with self.result_container:
             if st.session_state[self.DISPLAY_SELECT] == self.DIAGRAM:

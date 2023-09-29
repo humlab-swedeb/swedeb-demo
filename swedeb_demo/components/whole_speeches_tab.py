@@ -29,7 +29,10 @@ class FullSpeechDisplay(ExpandedSpeechDisplay, ToolTab):
 
         if self.has_and_is(self.EXPANDED_SPEECH):
             reset_dict = {self.EXPANDED_SPEECH: False}
-            self.display_expanded_speech(reset_dict, self.api, self.TAB_KEY)
+            self.display_expanded_speech(reset_dict, 
+                                         self.api, 
+                                         self.TAB_KEY, 
+                                         search_hit=None)
         else:
             session_state_initial_values = {
                 self.CURRENT_PAGE: 0,
@@ -92,7 +95,7 @@ class FullSpeechDisplay(ExpandedSpeechDisplay, ToolTab):
 
     def display_results(self, anforanden: pd.DataFrame) -> None:
         with self.bottom_container:
-            self.display_settings_info(with_search_hits=False)
+            self.display_settings_info(n_hits=len(anforanden), with_search_hits=False)
             _, col_right = st.columns([4, 2])
 
             with col_right:

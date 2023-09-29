@@ -56,7 +56,7 @@ def add_meta_sidebar(api: ADummyApi) -> Any:
 
     with sidebar_container:
         st.header(ct.m_meta_header, help=ct.m_meta_help)
-        side_expander = st.expander(ct.m_meta_expander)
+        side_expander = st.expander(ct.m_meta_expander, expanded=True)
         st.caption(ct.m_meta_caption)
 
         with side_expander:

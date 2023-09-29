@@ -34,26 +34,28 @@ class ToolTab:
 
 
     def display_settings_info(
-        self, with_search_hits: bool = True, hits: str = ""
+        self, n_hits:int, with_search_hits: bool = True, hits: str = ""
     ) -> None:
         settings = self.search_display.get_current_settings()
         if with_search_hits:
-            searches = f'"{self.get_search_box()}"'
+            searches = f'{self.get_search_box()}'
             st.info(
 
-                f"Resultat för sökningen **{searches}** {hits}  \n{settings}"
+                f"Resultat för sökningen `{searches}` {hits}  \n\n{settings}" 
+                f"\n\n**Antal träffar:** {n_hits}"
             )
         else:
             st.info(
-                f"Resultat för sökningen:  \n{settings}"
+                f"Resultat för sökningen: \n \n{settings}"
+                f"\n\n**Antal träffar:** {n_hits}"
             )
 
     def display_settings_info_no_hits(self, with_search_hits: bool = True) -> None:
         settings = self.search_display.get_current_settings()
-        searches = f'"{self.get_search_box()}"'
+        searches = f'{self.get_search_box()}'
         if with_search_hits:
             st.info(
-                f"Inga resultat för sökningen **{searches}**.  "
+                f"Inga resultat för sökningen `{searches}`.  "
                 f"\n{settings}  \n Utöka filtreringen eller försök med"
                 "ett annat sökord för att få fler träffar."
             )
@@ -79,13 +81,21 @@ class ToolTab:
         )
 
     @st.cache_data
-    def convert_df(_self, df: pd.DataFrame) -> bytes:
-        return df.to_csv(index=True).encode("utf-8")
+    def convert_df(_self, df: pd.DataFrame, index:bool) -> bytes:
+        df_down = df.copy()
+        if 'Protokoll' in df_down.columns:
+            # remove number from protocoll string 
+            df_down['Protokoll'] = df_down['Protokoll'].apply(lambda x: x.split('_')[0])
+        return df_down.to_csv(index=index).encode("utf-8")
 
-    def add_download_button(self, data: pd.DataFrame, file_name: str) -> None:
+    def add_download_button(self, 
+                            data: pd.DataFrame, 
+                            file_name: str, 
+                            button_label:str=None,
+                            index:bool=False) -> None:
         st.download_button(
-            label="Ladda ner som csv",
-            data=self.convert_df(data),
+            label="Ladda ner som csv" if button_label is None else button_label,
+            data=self.convert_df(data, index),
             file_name=file_name,
             mime="text/csv",
         )

@@ -1,4 +1,3 @@
-from typing import List
 import streamlit as st
 
 from swedeb_demo.api.dummy_api import ADummyApi  # type: ignore
@@ -10,9 +9,10 @@ class ExpandedSpeechDisplay:
         reset_dict: dict,
         api: ADummyApi,
         tab_key: str,
-        search_terms: List[str] = None,
+        search_hit: str = None,
     ) -> None:
-        if 'selected_protocol' in st.session_state:
+        if 'selected_protocol' in st.session_state and \
+            st.session_state['selected_protocol'] is not None:
             selected_protocol = st.session_state['selected_protocol']
             
             ch = "kammaren"
@@ -37,8 +37,7 @@ class ExpandedSpeechDisplay:
                 **Hela protokollet** {link}, {chamber}
                 
                 **Talarintroduktion**: {speaker_intro}
-                
-                
+
                 """
                 
                 st.info(info_text)
@@ -58,12 +57,15 @@ class ExpandedSpeechDisplay:
             text = text.replace('<',' ').replace('>',' ')
 
             text = text.replace("\n", "<br><br>")
-            if search_terms is not None:
-                for search_term in search_terms:
-                    text = text.replace(
-                        search_term,
-                        f'<span style="background-color: #FFFF00">{search_term}</span>',
-                    )
+            if search_hit is not None:
+                if search_hit not in text:
+                    search_hit = search_hit.lower()
+                    if search_hit not in text:
+                        search_hit = search_hit.capitalize()
+                text = text.replace(
+                    search_hit,
+                    f'<span style="background-color: #FFFF00">{search_hit}</span>',
+                )
             st.markdown(
                 f'<p style="border-width:2px; border-style:solid; border-color:#000000; padding: 1em;">{text}</p>',  # noqa: E501
                 unsafe_allow_html=True,
@@ -73,3 +75,4 @@ class ExpandedSpeechDisplay:
         st.session_state["selected_protocol"] = None
         for k, v in reset_dict.items():
             st.session_state[k] = v
+        

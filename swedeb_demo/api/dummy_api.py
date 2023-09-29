@@ -106,7 +106,7 @@ class ADummyApi:
     def get_speaker_note(self, document_name: str) -> str:
         speech = self.get_speech(document_name)
         if "speaker_note_id" not in speech:
-            return document_name
+            return ''
         if speech["speaker_note_id"] == "missing":
             return "Talet saknar notering"
         else:
@@ -256,6 +256,7 @@ class ADummyApi:
             # form='dataframe'
             form="kwic",  # 'simple', 'dataframes',...
             p_show=["word"],  # ['word', 'pos', 'lemma']
+            
             s_show=[
                 "speech_who",
                 "speech_title",

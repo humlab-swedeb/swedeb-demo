@@ -5,8 +5,7 @@ import streamlit as st
 
 import swedeb_demo.components.component_texts as ct
 from swedeb_demo.api.dummy_api import ADummyApi  # type: ignore
-from swedeb_demo.components.meta_data_display import \
-    MetaDataDisplay  # type: ignore
+from swedeb_demo.components.meta_data_display import MetaDataDisplay  # type: ignore
 from swedeb_demo.components.speech_display_mixin import ExpandedSpeechDisplay
 from swedeb_demo.components.table_results import TableDisplay
 from swedeb_demo.components.tool_tab import ToolTab
@@ -34,7 +33,10 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
 
         if self.has_and_is(self.EXPANDED_SPEECH):
             self.display_expanded_speech(
-                self.get_reset_dict(), self.api, self.TAB_KEY, search_terms=None
+                self.get_reset_dict(),
+                self.api,
+                self.TAB_KEY,
+                st.session_state["selected_hit"],
             )
         else:
             self.define_displays()
@@ -44,8 +46,9 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
                 self.draw_search_settings()
 
             self.init_session_state(self.get_initial_values())
-        if st.session_state[self.SEARCH_PERFORMED] and \
-            not self.has_and_is(self.EXPANDED_SPEECH):
+        if st.session_state[self.SEARCH_PERFORMED] and not self.has_and_is(
+            self.EXPANDED_SPEECH
+        ):
             self.show_display()
 
     def draw_search_settings(self):
@@ -53,12 +56,11 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
             st.text_input(ct.kwic_text_input, key=self.SEARCH_BOX)
             self.add_window_size()
             self.add_lemma_word_toggle()
-            #self.add_search_button(ct.kwic_search_button)
+            # self.add_search_button(ct.kwic_search_button)
             button_name = ct.kwic_search_button
             if self.has_and_is(self.SEARCH_PERFORMED):
-                button_name = 'uppdatera sökning' 
-            st.form_submit_button(button_name, 
-                                  on_click=self.handle_button_click)
+                button_name = ct.kwic_update_button
+            st.form_submit_button(button_name, on_click=self.handle_button_click)
         self.draw_line()
 
     def get_st_dict_when_button_clicked(self) -> dict:
@@ -75,7 +77,7 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
         self.result_container = st.container()
 
     def add_lemma_word_toggle(self) -> None:
-        st.toggle(ct.kwic_lemma_toggle, key=self.LEMMA_WORD_TOGGLE)
+        st.toggle(ct.kwic_toggle, key=self.LEMMA_WORD_TOGGLE, help=ct.kwic_toggle_help)
 
     def get_initial_values(self) -> dict:
         return {
@@ -88,7 +90,7 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
             with self.top_container:
                 st.warning("Fyll i en sökterm")
             st.session_state[self.SEARCH_PERFORMED] = False
-            st.write()
+            st.write()  # hack to stay in kwic tab
         else:
             self.handle_search_click(self.get_st_dict_when_button_clicked())
 
@@ -105,7 +107,7 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
             key=key,
             min_value=0,
             max_value=5,
-            value=2,
+            value=st.session_state[key] if key in st.session_state else 2,
         )
 
     def define_displays(self) -> None:
@@ -119,16 +121,30 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
         )
 
     def get_reset_dict(self) -> dict:
-        reset = {
+        return {
             self.SEARCH_PERFORMED: True,
             self.CURRENT_PAGE: st.session_state[self.CURRENT_PAGE],
+            self.SEARCH_BOX: self.get_search_box(),
+            self.LEMMA_WORD_TOGGLE: self.get_lemma_word_toggle(),
+            self.N_WORDS_BEFORE: self.get_n_words_before(),
+            self.N_WORDS_AFTER: self.get_n_words_before(),
             self.EXPANDED_SPEECH: False,
-            self.SEARCH_BOX: st.session_state[self.SEARCH_BOX],
-            self.LEMMA_WORD_TOGGLE : st.session_state[self.LEMMA_WORD_TOGGLE]
         }
 
-        return reset
+    def get_lemma_word_toggle(self):
+        if self.LEMMA_WORD_TOGGLE in st.session_state:
+            return st.session_state[self.LEMMA_WORD_TOGGLE]
+        return False
     
+    def get_n_words_after(self):
+        if self.N_WORDS_AFTER in st.session_state:
+            return st.session_state[self.N_WORDS_AFTER]
+        return 2
+
+    def get_n_words_before(self):
+        if self.N_WORDS_BEFORE in st.session_state:
+            return st.session_state[self.N_WORDS_BEFORE]
+        return 2
 
     def show_display(self) -> None:
         hit = self.get_search_box()
@@ -142,7 +158,6 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
 
     def show_hit(self, hits: List[str]) -> None:
         selections = self.search_display.get_selections()
-        st.session_state['kwic_selections'] = selections
         data = self.get_data(
             hits,
             self.search_display.get_slider(),
@@ -155,10 +170,11 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
         if data.empty:
             self.display_settings_info_no_hits()
         else:
+            st.session_state[self.DATA_KEY] = data
             with self.n_hits_container:
                 self.add_download_button(data, ct.kwic_filename)
             with self.result_desc_container:
-                self.display_settings_info()
+                self.display_settings_info(n_hits=len(data))
             with self.result_container:
                 st_columns = self.table_display.get_kwick_columns()
                 self.add_sort_buttons(self.labels, st_columns[:-1], self.column_names)
@@ -167,13 +183,11 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
                     st.markdown(ct.kwic_show_speeches)
 
                 if self.SORT_KEY in st.session_state:
-                    data.sort_values(
+                    st.session_state[self.DATA_KEY] =  data.sort_values(
                         st.session_state[self.SORT_KEY],
                         ascending=st.session_state[self.ASCENDING_KEY],
-                        inplace=True,
+                       
                     )
-
-                st.session_state[self.DATA_KEY] = data
                 self.table_display.write_table()
 
     @st.cache_data

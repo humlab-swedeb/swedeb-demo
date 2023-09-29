@@ -77,16 +77,15 @@ class TableDisplay:
                     key=f"{self.current_container}_B",
                     on_click=self.increase_page,
                 )
-            info_col.caption(f"Sida {current_page + 1} av {max_pages + 1}")
+            info_col.caption(f"Sida {current_page + 1} av {max_pages + 1}." 
+                             f" Totalt {len(st.session_state[self.data_key])} träffar.")
 
     def display_partial_table(self, current_df: pd.DataFrame) -> None:
         st.dataframe(current_df.style.format(thousands=" "))
-        # self.add_download_button(current_df, "word_trends_table.csv")
 
     def display_partial_source(self, current_df: pd.DataFrame) -> None:
         for i, row in current_df.iterrows():
             self.write_wt_row(i, row)
-        # self.add_download_button(current_df, "anforanden.csv")
 
     def display_partial_kwic(self, current_df: pd.DataFrame) -> None:
         for i, row in current_df.iterrows():
@@ -100,11 +99,17 @@ class TableDisplay:
             return f'<p style="color:{color}";>{party}</p>'
         return party
 
-    def update_speech_state(self, protocol: str, speaker: str, year: str) -> None:
+    def update_speech_state(self, 
+                            protocol: str, 
+                            speaker: str, 
+                            year: str, 
+                            hit=None) -> None:
         st.session_state[self.expanded_speech_key] = True
         st.session_state["selected_protocol"] = protocol
         st.session_state["selected_speaker"] = speaker
         st.session_state["selected_year"] = year
+        if hit is not None:
+            st.session_state["selected_hit"] = hit
 
     def get_kwick_columns(self) -> Any:
         return st.columns([3, 3, 3, 2, 2, 2, 2, 2])
@@ -134,7 +139,7 @@ class TableDisplay:
                 "Visa", 
                 key=f"{self.current_container}_b_{i}",
                 on_click=self.update_speech_state,
-                args=(row["Protokoll"], speaker, row["År"]),
+                args=(row["Protokoll"], speaker, row["År"], row["Sökord"]),
             )
         left_col.write(row["Kontext Vänster"])
         hit_col.markdown(f"**{row['Sökord']}**")
@@ -156,8 +161,8 @@ class TableDisplay:
         else:
             (
                 speaker_col,
-                gender_col,
                 year_col,
+                gender_col,
                 party_col,
                 link_col,
                 expander_col,
@@ -179,11 +184,15 @@ class TableDisplay:
                 unsafe_allow_html=True,
             )
         with expander_col:
+            hit = None
+            if 'hit' in row:
+                hit = row['hit']
+            
             st.button(
                 "Visa hela",
                 key=f"{self.current_container}_b_{i}",
                 on_click=self.update_speech_state,
-                args=(row["Protokoll"], speaker, row["År"]),
+                args=(row["Protokoll"], speaker, row["År"], hit),
             )
 
     def translate_gender(self, gender: str, short: bool = False) -> str:
@@ -202,9 +211,9 @@ class TableDisplay:
 
     def get_columns(self, include_hit=False) -> Any:
         if include_hit:
-            return st.columns([2, 2, 2, 2, 3, 2, 1])
+            return st.columns([2, 2, 1, 1, 2, 2, 2])
         else:
-            return st.columns([2, 2, 2, 2, 3, 1])
+            return st.columns([2, 2, 1, 1, 2, 2])
 
     def increase_page(self) -> None:
         st.session_state[self.current_page_name] += 1
