@@ -61,27 +61,37 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
                 self.SEARCH_PERFORMED: True,
                 self.CURRENT_PAGE_TAB: 0,
                 self.CURRENT_PAGE_SOURCE: 0,
+                self.EXPANDED_SPEECH: False,
+
             }
 
-            self.init_session_state(self.get_initial_values())
             self.define_displays()
 
             with self.search_container:
-                st.text_input(ct.wt_text_input, key=self.SEARCH_BOX)
+                self.draw_search_settings()
+                
 
-                self.add_search_button(ct.wt_search_button)
+            if self.has_and_is(self.SEARCH_PERFORMED):
+                self.show_display()
+            else:
+                self.init_session_state(self.get_initial_values())
 
-        if st.session_state[self.SEARCH_PERFORMED] and \
-            not self.has_and_is(self.EXPANDED_SPEECH):
-            self.show_display()
+    def draw_search_settings(self):
+        with st.form(key=f"form_{self.TAB_KEY}"):
+            st.text_input(ct.wt_text_input, key=self.SEARCH_BOX)
+            st.form_submit_button(ct.wt_search_button, 
+                                  on_click=self.handle_button_click)
+        self.draw_line()
+
 
     def get_initial_values(self):
         session_state_initial_values = {
-            self.SEARCH_PERFORMED: False,
+            #self.SEARCH_PERFORMED: False,
             self.CURRENT_PAGE_TAB: 0,
             self.CURRENT_PAGE_SOURCE: 0,
             self.NORMAL_TABLE_WT: self.NON_NORMALIZED,
             self.NORMAL_DIAGRAM_WT: self.NON_NORMALIZED,
+            self.EXPANDED_SPEECH: False,
         }
 
         return session_state_initial_values

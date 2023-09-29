@@ -42,26 +42,26 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
             self.define_displays()
 
             with self.top_container:
-                st.caption(ct.kwic_desc)
                 self.draw_search_settings()
 
-            self.init_session_state(self.get_initial_values())
-        if st.session_state[self.SEARCH_PERFORMED] and not self.has_and_is(
-            self.EXPANDED_SPEECH
-        ):
-            self.show_display()
+            if self.has_and_is(self.SEARCH_PERFORMED):
+                self.show_display()
+            else:
+                self.init_session_state(self.get_initial_values())
+
 
     def draw_search_settings(self):
         with st.form(key=f"form_{self.TAB_KEY}"):
+            st.caption(ct.kwic_desc)
             st.text_input(ct.kwic_text_input, key=self.SEARCH_BOX)
             self.add_window_size()
             self.add_lemma_word_toggle()
-            # self.add_search_button(ct.kwic_search_button)
             button_name = ct.kwic_search_button
             if self.has_and_is(self.SEARCH_PERFORMED):
                 button_name = ct.kwic_update_button
             st.form_submit_button(button_name, on_click=self.handle_button_click)
         self.draw_line()
+
 
     def get_st_dict_when_button_clicked(self) -> dict:
         return {
@@ -81,7 +81,7 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
 
     def get_initial_values(self) -> dict:
         return {
-            self.SEARCH_PERFORMED: False,
+            #self.SEARCH_PERFORMED: False,
             self.CURRENT_PAGE: 0,
         }
 

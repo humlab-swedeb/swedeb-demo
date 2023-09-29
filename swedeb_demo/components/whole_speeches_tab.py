@@ -36,7 +36,7 @@ class FullSpeechDisplay(ExpandedSpeechDisplay, ToolTab):
         else:
             session_state_initial_values = {
                 self.CURRENT_PAGE: 0,
-                self.SEARCH_PERFORMED: False,
+                #self.SEARCH_PERFORMED: False,
                 self.EXPANDED_SPEECH: False,
             }
             self.st_dict_when_button_clicked = {
@@ -62,11 +62,11 @@ class FullSpeechDisplay(ExpandedSpeechDisplay, ToolTab):
                 self.add_search_button(ct.sp_search_button)
                 self.draw_line()
 
-            self.init_session_state(session_state_initial_values)
 
-        if st.session_state[self.SEARCH_PERFORMED] and \
-            not self.has_and_is(self.EXPANDED_SPEECH):
-            self.show_display()
+            if self.has_and_is(self.SEARCH_PERFORMED):
+                self.show_display()
+            else:
+                self.init_session_state(session_state_initial_values)
 
     def handle_button_click(self) -> None:
         for k, v in self.st_dict_when_button_clicked.items():

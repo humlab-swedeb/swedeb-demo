@@ -44,11 +44,11 @@ kwic_show_speeches = "Visa anföranden"
 # WORD TRENDs display texts   #
 ###############################
 
-word_trend_desc = """Sök på ett eller flera ord för att se hur de har använts över tid. 
-För att söka på flera ord särskilj med kommatecken, t ex `debatt,information`. 
-Sök med `*` för att få fler varianter, t.ex. `debatt*`. Under Filtrera sökresultat  
-kan du avgränsa anförandena till vissa partier, talare eller år. Observera att denna 
-test-korpus är lemmatiserad, dvs sökresultateten baseras på ordets grammatiska rot."""
+word_trend_desc = ("Sök på ett eller flera ord för att se hur de har använts över tid. "
+"För att söka på flera ord särskilj med kommatecken, t ex `debatt,information`. "
+"Sök med `*` för att få fler varianter, t.ex. `debatt*`. Under Filtrera sökresultat " 
+"kan du avgränsa anförandena till vissa partier, talare eller år. Observera att denna" 
+"test-korpus är lemmatiserad, dvs sökresultateten baseras på ordets grammatiska rot.")
 
 # word trends table/plot/speeches
 wt_table_type = "table"
