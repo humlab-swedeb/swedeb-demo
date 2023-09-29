@@ -1,4 +1,4 @@
-from typing import Any, List, Tuple
+from typing import List, Tuple
 
 import pandas as pd
 import plotly.graph_objects as go  # type: ignore
@@ -46,9 +46,9 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
                 self.get_reset_dict(),
                 self.api,
                 self.TAB_KEY,
-                st.session_state['selected_hit'],
+                st.session_state["selected_hit"],
             )
-        
+
         else:
             st.caption(ct.word_trend_desc)
 
@@ -62,14 +62,12 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
                 self.CURRENT_PAGE_TAB: 0,
                 self.CURRENT_PAGE_SOURCE: 0,
                 self.EXPANDED_SPEECH: False,
-
             }
 
             self.define_displays()
 
             with self.search_container:
                 self.draw_search_settings()
-                
 
             if self.has_and_is(self.SEARCH_PERFORMED):
                 self.show_display()
@@ -79,14 +77,14 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
     def draw_search_settings(self):
         with st.form(key=f"form_{self.TAB_KEY}"):
             st.text_input(ct.wt_text_input, key=self.SEARCH_BOX)
-            st.form_submit_button(ct.wt_search_button, 
-                                  on_click=self.handle_button_click)
+            st.form_submit_button(
+                ct.wt_search_button, on_click=self.handle_button_click
+            )
         self.draw_line()
-
 
     def get_initial_values(self):
         session_state_initial_values = {
-            #self.SEARCH_PERFORMED: False,
+            # self.SEARCH_PERFORMED: False,
             self.CURRENT_PAGE_TAB: 0,
             self.CURRENT_PAGE_SOURCE: 0,
             self.NORMAL_TABLE_WT: self.NON_NORMALIZED,
@@ -136,7 +134,6 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
         )
 
     @st.cache_data
-    
     def get_data(
         _self,
         search_words: List[str],
@@ -144,7 +141,7 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
         end_year: int,
         selections: dict,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
-        st.session_state['word_trend_selections'] = selections
+        st.session_state["word_trend_selections"] = selections
         res = _self.api.get_word_trend_results(
             search_words,
             filter_opts=selections,
@@ -153,12 +150,12 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
         )
 
         if res[0].shape[1] > 1:
-            res[0]['Totalt'] = res[0].sum(axis=1)
+            res[0]["Totalt"] = res[0].sum(axis=1)
         res[0].reset_index(inplace=True)
         res[0].rename(columns={"year": "År"}, inplace=True)
         res[0].set_index(res[0].columns[0], inplace=True)
         return res
-    
+
     def normalize_word_per_year(self, data: pd.DataFrame) -> pd.DataFrame:
         data = data.merge(self.words_per_year, left_index=True, right_index=True)
         data = data.iloc[:, :].div(data.n_raw_tokens, axis=0)
@@ -190,22 +187,35 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
                 if kwic_like_data.empty:
                     self.display_settings_info_no_hits()
                 else:
-                    self.display_settings_info(n_hits=len(kwic_like_data), 
-                                               hits=f": {', '.join(hits)}")
-
-                    col_display_select, down_col_a, down_col_b = st.columns([2, 1, 1])
-                    with col_display_select:
-                        self.add_radio_buttons()
-                    with down_col_a:
-                        st.write("")
-                        self.add_download_button(data, ct.wt_filename, button_label="Ladda ner ordfrekvenser", index=True)
-                    with down_col_b:
-                        st.write("")
-                        self.add_download_button(kwic_like_data, ct.wt_filename_speeches, button_label="Ladda ner anföranden")
-                    self.draw_line()
-                    self.display_results(data, kwic_like_data)
+                    self.draw_result(hits, data, kwic_like_data)
         else:
             self.display_settings_info_no_hits(self)
+
+    def draw_result(self, hits, data, kwic_like_data):
+        self.display_settings_info(
+            n_hits=len(kwic_like_data), hits=f": {', '.join(hits)}"
+        )
+
+        col_display_select, down_a, down_b = st.columns([2, 1, 1])
+        with col_display_select:
+            self.add_radio_buttons()
+        with down_a:
+            st.write("")
+            self.add_download_button(
+                data,
+                ct.wt_filename,
+                button_label="Ladda ner ordfrekvenser",
+                index=True,
+            )
+        with down_b:
+            st.write("")
+            self.add_download_button(
+                kwic_like_data,
+                ct.wt_filename_speeches,
+                button_label="Ladda ner anföranden",
+            )
+        self.draw_line()
+        self.display_results(data, kwic_like_data)
 
     def add_radio_buttons(self):
         st.radio(
@@ -242,9 +252,7 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
             data = self.normalize_word_per_year(data)
         return data
 
-    def display_results(
-        self, data: pd.DataFrame, kwic_like_data: pd.DataFrame
-    ) -> None:
+    def display_results(self, data: pd.DataFrame, kwic_like_data: pd.DataFrame) -> None:
         with self.result_container:
             if st.session_state[self.DISPLAY_SELECT] == self.DIAGRAM:
                 data = self.normalize(data, self.NORMAL_DIAGRAM_WT)

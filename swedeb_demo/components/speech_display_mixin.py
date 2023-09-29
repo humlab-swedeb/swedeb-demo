@@ -11,10 +11,12 @@ class ExpandedSpeechDisplay:
         tab_key: str,
         search_hit: str = None,
     ) -> None:
-        if 'selected_protocol' in st.session_state and \
-            st.session_state['selected_protocol'] is not None:
-            selected_protocol = st.session_state['selected_protocol']
-            
+        if (
+            "selected_protocol" in st.session_state
+            and st.session_state["selected_protocol"] is not None
+        ):
+            selected_protocol = st.session_state["selected_protocol"]
+
             ch = "kammaren"
             chamber = f"Andra {ch}" if "ak" in selected_protocol else f"Första {ch}"
 
@@ -39,7 +41,7 @@ class ExpandedSpeechDisplay:
                 **Talarintroduktion**: {speaker_intro}
 
                 """
-                
+
                 st.info(info_text)
 
             with col_3:
@@ -51,10 +53,9 @@ class ExpandedSpeechDisplay:
                 )
             st.write("**Hela anförandet:**")
 
-    
             text = api.get_speech_text(st.session_state["selected_protocol"])
             # causes InvalidCharacterError: The string contains invalid characters.
-            text = text.replace('<',' ').replace('>',' ')
+            text = text.replace("<", " ").replace(">", " ")
 
             text = text.replace("\n", "<br><br>")
             if search_hit is not None:
@@ -70,9 +71,8 @@ class ExpandedSpeechDisplay:
                 f'<p style="border-width:2px; border-style:solid; border-color:#000000; padding: 1em;">{text}</p>',  # noqa: E501
                 unsafe_allow_html=True,
             )
-            
+
     def reset_speech_state(self, reset_dict: dict) -> None:
         st.session_state["selected_protocol"] = None
         for k, v in reset_dict.items():
             st.session_state[k] = v
-        

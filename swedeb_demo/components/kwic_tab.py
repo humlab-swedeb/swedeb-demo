@@ -5,7 +5,8 @@ import streamlit as st
 
 import swedeb_demo.components.component_texts as ct
 from swedeb_demo.api.dummy_api import ADummyApi  # type: ignore
-from swedeb_demo.components.meta_data_display import MetaDataDisplay  # type: ignore
+from swedeb_demo.components.meta_data_display import \
+    MetaDataDisplay  # type: ignore
 from swedeb_demo.components.speech_display_mixin import ExpandedSpeechDisplay
 from swedeb_demo.components.table_results import TableDisplay
 from swedeb_demo.components.tool_tab import ToolTab
@@ -42,6 +43,8 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
             self.define_displays()
 
             with self.top_container:
+                st.caption(ct.kwic_desc)
+
                 self.draw_search_settings()
 
             if self.has_and_is(self.SEARCH_PERFORMED):
@@ -49,10 +52,8 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
             else:
                 self.init_session_state(self.get_initial_values())
 
-
     def draw_search_settings(self):
         with st.form(key=f"form_{self.TAB_KEY}"):
-            st.caption(ct.kwic_desc)
             st.text_input(ct.kwic_text_input, key=self.SEARCH_BOX)
             self.add_window_size()
             self.add_lemma_word_toggle()
@@ -61,7 +62,6 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
                 button_name = ct.kwic_update_button
             st.form_submit_button(button_name, on_click=self.handle_button_click)
         self.draw_line()
-
 
     def get_st_dict_when_button_clicked(self) -> dict:
         return {
@@ -81,7 +81,7 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
 
     def get_initial_values(self) -> dict:
         return {
-            #self.SEARCH_PERFORMED: False,
+            # self.SEARCH_PERFORMED: False,
             self.CURRENT_PAGE: 0,
         }
 
@@ -135,7 +135,7 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
         if self.LEMMA_WORD_TOGGLE in st.session_state:
             return st.session_state[self.LEMMA_WORD_TOGGLE]
         return False
-    
+
     def get_n_words_after(self):
         if self.N_WORDS_AFTER in st.session_state:
             return st.session_state[self.N_WORDS_AFTER]
@@ -183,10 +183,9 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
                     st.markdown(ct.kwic_show_speeches)
 
                 if self.SORT_KEY in st.session_state:
-                    st.session_state[self.DATA_KEY] =  data.sort_values(
+                    st.session_state[self.DATA_KEY] = data.sort_values(
                         st.session_state[self.SORT_KEY],
                         ascending=st.session_state[self.ASCENDING_KEY],
-                       
                     )
                 self.table_display.write_table()
 

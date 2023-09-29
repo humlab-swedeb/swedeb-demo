@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from typing import List, Mapping,  Union
+from typing import List, Mapping, Union
 
 import pandas as pd
 import penelope.utility as pu  # type: ignore
@@ -20,9 +20,12 @@ from swedeb_demo.api.westac.riksprot.parlaclarin import speech_text as sr
 class ADummyApi:
     """Dummy API for testing and developing the SweDeb GUI"""
 
-    def __init__(self, env_file: str = ".env_sample_docker", 
-                 corpus_dir = "/usr/local/share/cwb/registry/", 
-                 corpus_name="RIKSPROT_V090_TEST") -> None:
+    def __init__(
+        self,
+        env_file: str = ".env_sample_docker",
+        corpus_dir="/usr/local/share/cwb/registry/",
+        corpus_name="RIKSPROT_V090_TEST",
+    ) -> None:
         load_dotenv(env_file)
         self.tag: str = os.getenv("TAG")
         self.folder = os.getenv("FOLDER")
@@ -61,7 +64,7 @@ class ADummyApi:
         )
         self.kwic_corpus = self.load_kwic_corpus()
         self.words_per_year = self._set_words_per_year()
-    
+
     def get_only_parties_with_data(self):
         parties_in_data = self.corpus.document_index.party_id.unique()
         return parties_in_data
@@ -90,7 +93,7 @@ class ADummyApi:
                 selected = {}
                 for k, v in specs.items():
                     if v in self.get_only_parties_with_data():
-                        selected[k] = v 
+                        selected[k] = v
                 return selected
 
     def get_word_hits(self, search_term: str, n_hits: int = 5) -> list[str]:
@@ -106,7 +109,7 @@ class ADummyApi:
     def get_speaker_note(self, document_name: str) -> str:
         speech = self.get_speech(document_name)
         if "speaker_note_id" not in speech:
-            return ''
+            return ""
         if speech["speaker_note_id"] == "missing":
             return "Talet saknar notering"
         else:
@@ -119,7 +122,7 @@ class ADummyApi:
 
         Args:
             words: list of strings (search terms)
-            corpus (VectorizedCorpus, optional): current corpus in None. 
+            corpus (VectorizedCorpus, optional): current corpus in None.
             Defaults to None.
 
         Returns:
@@ -229,8 +232,11 @@ class ADummyApi:
         return query[1:]
 
     def rename_selection_keys(self, selections):
-        renames = {"gender_id": "speech_gender_id", "party_id": "speech_party_id",
-                    "who":"speech_who"}
+        renames = {
+            "gender_id": "speech_gender_id",
+            "party_id": "speech_party_id",
+            "who": "speech_who",
+        }
         for key, value in renames.items():
             if key in selections:
                 selections[value] = selections.pop(key)
@@ -256,7 +262,6 @@ class ADummyApi:
             # form='dataframe'
             form="kwic",  # 'simple', 'dataframes',...
             p_show=["word"],  # ['word', 'pos', 'lemma']
-            
             s_show=[
                 "speech_who",
                 "speech_title",
@@ -332,9 +337,7 @@ class ADummyApi:
             return pd.DataFrame(), pd.DataFrame()
 
         trends_data: SweDebTrendsData = SweDebTrendsData(
-            corpus=self.corpus, 
-            person_codecs=self.person_codecs, 
-            n_top=1000000  
+            corpus=self.corpus, person_codecs=self.person_codecs, n_top=1000000
         )
         pivot_keys = list(filter_opts.keys()) if filter_opts else []
 
@@ -399,7 +402,7 @@ class ADummyApi:
             col str: column name, possibly a gender
 
         Returns:
-            str: Swedish translation of column name if it represents a gender, 
+            str: Swedish translation of column name if it represents a gender,
             else the original column name
         """
         new_col = col
@@ -434,7 +437,7 @@ class ADummyApi:
 
 # speech:
 # (['speaker_note_id', 'who', 'u_id', 'paragraphs', 'num_tokens', 'num_words',
-#  'page_number', 'page_number2', 'protocol_name', 'date', 'document_id', 'year', 
-# 'document_name', 'filename', 'n_tokens', 'n_utterances', 'speech_index', 'gender_id', 
-# 'party_id', 'office_type_id', 'sub_office_type_id', 'Adjective', 'Adverb', 
+#  'page_number', 'page_number2', 'protocol_name', 'date', 'document_id', 'year',
+# 'document_name', 'filename', 'n_tokens', 'n_utterances', 'speech_index', 'gender_id',
+# 'party_id', 'office_type_id', 'sub_office_type_id', 'Adjective', 'Adverb',
 # 'Conjunction', 'Delimiter'

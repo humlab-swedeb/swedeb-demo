@@ -29,14 +29,13 @@ class FullSpeechDisplay(ExpandedSpeechDisplay, ToolTab):
 
         if self.has_and_is(self.EXPANDED_SPEECH):
             reset_dict = {self.EXPANDED_SPEECH: False}
-            self.display_expanded_speech(reset_dict, 
-                                         self.api, 
-                                         self.TAB_KEY, 
-                                         search_hit=None)
+            self.display_expanded_speech(
+                reset_dict, self.api, self.TAB_KEY, search_hit=None
+            )
         else:
             session_state_initial_values = {
                 self.CURRENT_PAGE: 0,
-                #self.SEARCH_PERFORMED: False,
+                # self.SEARCH_PERFORMED: False,
                 self.EXPANDED_SPEECH: False,
             }
             self.st_dict_when_button_clicked = {
@@ -61,7 +60,6 @@ class FullSpeechDisplay(ExpandedSpeechDisplay, ToolTab):
             with self.top_container:
                 self.add_search_button(ct.sp_search_button)
                 self.draw_line()
-
 
             if self.has_and_is(self.SEARCH_PERFORMED):
                 self.show_display()

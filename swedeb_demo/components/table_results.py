@@ -77,8 +77,10 @@ class TableDisplay:
                     key=f"{self.current_container}_B",
                     on_click=self.increase_page,
                 )
-            info_col.caption(f"Sida {current_page + 1} av {max_pages + 1}." 
-                             f" Totalt {len(st.session_state[self.data_key])} träffar.")
+            info_col.caption(
+                f"Sida {current_page + 1} av {max_pages + 1}."
+                f" Totalt {len(st.session_state[self.data_key])} träffar."
+            )
 
     def display_partial_table(self, current_df: pd.DataFrame) -> None:
         st.dataframe(current_df.style.format(thousands=" "))
@@ -99,11 +101,9 @@ class TableDisplay:
             return f'<p style="color:{color}";>{party}</p>'
         return party
 
-    def update_speech_state(self, 
-                            protocol: str, 
-                            speaker: str, 
-                            year: str, 
-                            hit=None) -> None:
+    def update_speech_state(
+        self, protocol: str, speaker: str, year: str, hit=None
+    ) -> None:
         st.session_state[self.expanded_speech_key] = True
         st.session_state["selected_protocol"] = protocol
         st.session_state["selected_speaker"] = speaker
@@ -136,7 +136,7 @@ class TableDisplay:
         year_col.write(str(row["År"]))
         with prot_col:
             st.button(
-                "Visa", 
+                "Visa",
                 key=f"{self.current_container}_b_{i}",
                 on_click=self.update_speech_state,
                 args=(row["Protokoll"], speaker, row["År"], row["Sökord"]),
@@ -147,16 +147,16 @@ class TableDisplay:
         gender_col.write(self.translate_gender(row["Kön"], short=True))
 
     def write_wt_row(self, i: int, row: pd.Series) -> None:
-        if 'hit' in row:
+        if "hit" in row:
             (
-            speaker_col,
-            gender_col,
-            year_col,
-            party_col,
-            link_col,
-            hit_col,
-            expander_col,
-        ) = self.get_columns(include_hit=True)
+                speaker_col,
+                gender_col,
+                year_col,
+                party_col,
+                link_col,
+                hit_col,
+                expander_col,
+            ) = self.get_columns(include_hit=True)
             hit_col.write(row["hit"])
         else:
             (
@@ -168,7 +168,6 @@ class TableDisplay:
                 expander_col,
             ) = self.get_columns(include_hit=False)
 
-            
         gender_col.write(self.translate_gender(row["Kön"]))
         speaker = "Metadata saknas" if row["Talare"] == "" else row["link"]
         speaker_col.write(speaker)
@@ -185,9 +184,9 @@ class TableDisplay:
             )
         with expander_col:
             hit = None
-            if 'hit' in row:
-                hit = row['hit']
-            
+            if "hit" in row:
+                hit = row["hit"]
+
             st.button(
                 "Visa hela",
                 key=f"{self.current_container}_b_{i}",
@@ -231,8 +230,8 @@ class TableDisplay:
     def translate_protocol(self, protocol_name: str) -> str:
         split = protocol_name.split("-")
         chamber = split[3]
-        chamber = chamber.replace('ak', 'Andra kammaren')
-        chamber = chamber.replace('fk', 'Första kammaren')
+        chamber = chamber.replace("ak", "Andra kammaren")
+        chamber = chamber.replace("fk", "Första kammaren")
         year = split[1]
-        #return  protocol_name.split('_')[0] + ":" + chamber
+        # return  protocol_name.split('_')[0] + ":" + chamber
         return f"{chamber} {year}:{split[5].split('_')[0]}"

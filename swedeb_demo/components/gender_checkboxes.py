@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import streamlit as st
+
 from swedeb_demo.components import component_texts as ct
 
 

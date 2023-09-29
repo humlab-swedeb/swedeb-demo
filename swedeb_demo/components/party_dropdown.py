@@ -32,8 +32,6 @@ class PartyDropDown:
         span[data-baseweb="tag"][aria-label="{party_abbrev}, close by backspace"]{{
             background-color: {color};
         }}"""
-       
-   
 
     def get_css_for_all(
         self, party_ids: Iterable[int], party_abbrevs: Iterable[str]

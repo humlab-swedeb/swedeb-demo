@@ -53,7 +53,7 @@ class SpeakerDropDown:
             death_year = ""
         name = self.speakers.loc[x, "name"]
         party = self.speakers.loc[x, "party_abbrev"]
-        return f'{name} ({party}) {birth_year} {death_year}'
+        return f"{name} ({party}) {birth_year} {death_year}"
 
     def get_selection(self) -> dict | None:
         if len(self.selector) == 0:
@@ -63,5 +63,5 @@ class SpeakerDropDown:
     def get_selected_speakers_string(self) -> str:
         if len(self.selector) == 0:
             return "Alla talare"
-        selected = ', '.join([self.format_speaker(x) for x in self.selector])
+        selected = ", ".join([self.format_speaker(x) for x in self.selector])
         return f"**Valda talare**: {selected}.\n"

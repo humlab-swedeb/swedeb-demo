@@ -23,7 +23,7 @@ st.set_page_config(
 
 
 def add_banner() -> None:
-    """_summary_: Adds a banner to the top of the page containing the title and a 
+    """_summary_: Adds a banner to the top of the page containing the title and a
     dropdown menu for selecting a corpus"""
     banner = st.container()
     with banner:
@@ -96,7 +96,6 @@ def add_tabs(meta_search: Any, api: ADummyApi, debug: bool) -> None:
     def get_debug_speech(protocoll, tab) -> None:
         with tab:
             st.write(api.get_speech(protocoll))
-    
 
     with tab_WT:
         WordTrendsDisplay(api, shared_meta=meta_search, tab_key=ct.m_wt_tab)
@@ -121,9 +120,13 @@ def add_tabs(meta_search: Any, api: ADummyApi, debug: bool) -> None:
             st.caption("Session state:")
             st.write(st.session_state)
             st.text_input("Protokollsök", key="speech_finder")
-            st.button("visa protokoll", key="speech_finder_button", 
-                      on_click=get_debug_speech, 
-                      args=(st.session_state["speech_finder"],tab_debug))
+            st.button(
+                "visa protokoll",
+                key="speech_finder_button",
+                on_click=get_debug_speech,
+                args=(st.session_state["speech_finder"], tab_debug),
+            )
+
 
 def do_render(env_file: str, debug: bool, corpus_dir, corpus_name) -> None:
     dummy_api = ADummyApi(env_file, corpus_dir, corpus_name)
@@ -131,6 +134,7 @@ def do_render(env_file: str, debug: bool, corpus_dir, corpus_name) -> None:
     set_swedish_for_selections()
     meta_search = add_meta_sidebar(dummy_api)
     add_tabs(meta_search, dummy_api, debug)
+
 
 @click.command()
 @click.option(
@@ -140,13 +144,15 @@ def do_render(env_file: str, debug: bool, corpus_dir, corpus_name) -> None:
 )
 @click.option("--debug", default=True, help="Show session state info in debug tab")
 @click.option(
-    "--corpus_dir", default="/usr/local/share/cwb/registry/", 
-    help="Path to corpora directory (registry)")
-@click.option(
-    "--corpus_name", default="RIKSPROT_V090_TEST", help=
-    "Corpus name (eg. RIKSPROT_V090_TEST)"
+    "--corpus_dir",
+    default="/usr/local/share/cwb/registry/",
+    help="Path to corpora directory (registry)",
 )
-
+@click.option(
+    "--corpus_name",
+    default="RIKSPROT_V090_TEST",
+    help="Corpus name (eg. RIKSPROT_V090_TEST)",
+)
 def render_main_page(env_file: str, debug: bool, corpus_dir, corpus_name) -> None:
     do_render(env_file, debug, corpus_dir, corpus_name)
 
