@@ -134,7 +134,7 @@ m_meta_expander = "Filtreringsalternativ"
 
 # hits per page
 m_hits_per_page = "Antal resultat per sida"
-m_hits_options = [5, 10, 20, 50]
+m_hits_options = [10, 20, 50]
 
 # tabs
 m_kwic_tab = "KWIC"
