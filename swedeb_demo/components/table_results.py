@@ -30,6 +30,14 @@ class TableDisplay:
         self.party_colors = party_abbrev_to_color
         self.expanded_speech_key = expanded_speech_key
 
+    
+    def get_next_button_id(self) -> str:
+        if 'button_id' not in st.session_state:
+            st.session_state['button_id'] = 0
+        else:
+            st.session_state['button_id'] += 1
+        return st.session_state['button_id']
+
     def write_table(self) -> None:
         if self.data_key in st.session_state:
             current_page, max_pages = self.get_current_page(
@@ -137,7 +145,7 @@ class TableDisplay:
         with prot_col:
             st.button(
                 "Visa",
-                key=f"{self.current_container}_b_kwic_{i}",
+                key=f"{self.current_container}_b_kwic_{self.get_next_button_id()}",
                 on_click=self.update_speech_state,
                 args=(row["Protokoll"], speaker, row["År"], row["Sökord"]),
             )
@@ -189,7 +197,7 @@ class TableDisplay:
 
             st.button(
                 "Visa hela",
-                key=f"{self.current_container}_b_wt_{i}",
+                key=f"{self.current_container}_b_wt_{self.get_next_button_id()}",
                 on_click=self.update_speech_state,
                 args=(row["Protokoll"], speaker, row["År"], hit),
             )
