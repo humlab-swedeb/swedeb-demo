@@ -137,7 +137,7 @@ class TableDisplay:
         with prot_col:
             st.button(
                 "Visa",
-                key=f"{self.current_container}_b_{i}",
+                key=f"{self.current_container}_b_kwic_{i}",
                 on_click=self.update_speech_state,
                 args=(row["Protokoll"], speaker, row["År"], row["Sökord"]),
             )
@@ -189,7 +189,7 @@ class TableDisplay:
 
             st.button(
                 "Visa hela",
-                key=f"{self.current_container}_b_{i}",
+                key=f"{self.current_container}_b_wt_{i}",
                 on_click=self.update_speech_state,
                 args=(row["Protokoll"], speaker, row["År"], hit),
             )

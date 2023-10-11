@@ -127,7 +127,7 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
             self.SEARCH_BOX: self.get_search_box(),
             self.LEMMA_WORD_TOGGLE: self.get_lemma_word_toggle(),
             self.N_WORDS_BEFORE: self.get_n_words_before(),
-            self.N_WORDS_AFTER: self.get_n_words_before(),
+            self.N_WORDS_AFTER: self.get_n_words_after(),
             self.EXPANDED_SPEECH: False,
         }
 

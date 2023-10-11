@@ -162,12 +162,18 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
         data.drop(columns=["n_raw_tokens"], inplace=True)
 
         return data
+    
+    def get_selected_hits(self):
+        if self.SEARCH_BOX in st.session_state:
+            return st.session_state[self.SEARCH_BOX]
+        return ""
 
     def show_display(self) -> None:
         slider = self.search_display.get_slider()
 
         selections = self.search_display.get_selections()
         hits = self.get_search_terms()
+        
 
         if len(hits) > 0:
             with self.search_container:
@@ -187,13 +193,13 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
                 if kwic_like_data.empty:
                     self.display_settings_info_no_hits()
                 else:
-                    self.draw_result(hits, data, kwic_like_data)
+                    self.draw_result(hit_selector, data, kwic_like_data)
         else:
             self.display_settings_info_no_hits(self)
 
-    def draw_result(self, hits, data, kwic_like_data):
+    def draw_result(self, selected_hits, data, kwic_like_data):
         self.display_settings_info(
-            n_hits=len(kwic_like_data), hits=f": {', '.join(hits)}"
+            n_hits=len(kwic_like_data), hits=f": {', '.join(selected_hits)}"
         )
 
         col_display_select, down_a, down_b = st.columns([2, 1, 1])
