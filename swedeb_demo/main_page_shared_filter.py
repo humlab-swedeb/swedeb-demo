@@ -17,7 +17,7 @@ from swedeb_demo.components.word_trends_tab import \
     WordTrendsDisplay  # type: ignore
 
 
-
+API_SESSION_KEY = "dummy_api"
 
 def add_banner() -> None:
     """_summary_: Adds a banner to the top of the page containing the title and a
@@ -126,7 +126,11 @@ def add_tabs(meta_search: Any, api: ADummyApi, debug: bool) -> None:
 
 
 def do_render(env_file: str, debug: bool, corpus_dir, corpus_name) -> None:
-    dummy_api = ADummyApi(env_file, corpus_dir, corpus_name)
+    if API_SESSION_KEY in st.session_state:
+        dummy_api = st.session_state[API_SESSION_KEY]
+    else:
+        dummy_api = ADummyApi(env_file, corpus_dir, corpus_name)
+        st.session_state[API_SESSION_KEY] = dummy_api
     add_banner()
     set_swedish_for_selections()
     meta_search = add_meta_sidebar(dummy_api)
