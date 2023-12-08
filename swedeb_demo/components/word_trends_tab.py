@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List
 
 import pandas as pd
 import plotly.graph_objects as go  # type: ignore

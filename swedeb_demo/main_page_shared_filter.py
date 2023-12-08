@@ -132,8 +132,8 @@ def do_render(env_file: str, debug: bool, corpus_dir, corpus_name) -> None:
         dummy_api = st.session_state[API_SESSION_KEY]
     else:
    
-        with st.spinner('Laddar data...'):
-            dummy_api = ADummyApi(env_file, corpus_dir, corpus_name)
+        #with st.spinner('Laddar data...'):
+        dummy_api = ADummyApi(env_file, corpus_dir, corpus_name)
         st.session_state[API_SESSION_KEY] = dummy_api
     meta_search = add_meta_sidebar(dummy_api, sidebar_container)
     add_tabs(meta_search, dummy_api, debug)

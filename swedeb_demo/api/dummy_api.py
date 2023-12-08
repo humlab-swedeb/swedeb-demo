@@ -264,13 +264,13 @@ class ADummyApi:
             p_show=["word"],  # ['word', 'pos', 'lemma']
             s_show=[
                 "speech_who",
-                "speech_title",
-                "year_title",
                 "speech_party_id",
                 "speech_gender_id",
+                "speech_date",
+                "speech_title",
             ],
             order="first",
-            cut_off=100000,
+            cut_off=200000,
             matches=None,
             slots=None,
             cwb_ids=False,
@@ -278,7 +278,7 @@ class ADummyApi:
 
         if len(data) == 0:
             return pd.DataFrame()
-
+        
         renamed_selections = {
             "speech_gender_id": "gender_id",
             "speech_party_id": "party_id",
@@ -286,10 +286,16 @@ class ADummyApi:
         }
 
         data.reset_index(inplace=True)
+  
+
         data.rename(columns=renamed_selections, inplace=True)
-        data = data.astype({"gender_id": int, "party_id": int, "year_title": int})
-        data = data[data["year_title"].between(from_year, to_year)]
-        data = data.astype({"year_title": str})
+    
+        data = data.astype({"gender_id": int, "party_id": int})
+        data['year'] = data.apply(lambda x: int(x["speech_date"].split('-')[0]), axis=1)
+    
+        data = data[data["year"].between(from_year, to_year)]
+
+
         data = self.person_codecs.decode(data, drop=False)
         data["link"] = data.apply(
             lambda x: self.get_link(x["person_id"], x["name"]), axis=1
@@ -298,7 +304,7 @@ class ADummyApi:
             "left_word": "Kontext Vänster",
             "node_word": "Sökord",
             "right_word": "Kontext Höger",
-            "year_title": "År",
+            "year": "År",
             "name": "Talare",
             "party_abbrev": "Parti",
             "speech_title": "Protokoll",

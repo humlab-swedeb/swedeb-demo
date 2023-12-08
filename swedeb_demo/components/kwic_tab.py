@@ -17,6 +17,7 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
         self, another_api: ADummyApi, shared_meta: MetaDataDisplay, tab_key: str
     ) -> None:
         super().__init__(another_api, shared_meta, tab_key)
+
         self.labels = ct.kwic_labels
         self.column_names = ct.kwic_col_names
         self.add_containers()
@@ -86,6 +87,7 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
         }
 
     def handle_button_click(self) -> None:
+        
         if self.get_search_box().strip() == "":
             with self.top_container:
                 st.warning("Fyll i en sökterm")
@@ -93,6 +95,7 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
             st.write()  # hack to stay in kwic tab
         else:
             self.handle_search_click(self.get_st_dict_when_button_clicked())
+
 
     def add_window_size(self) -> None:
         cols_before, cols_after, _ = st.columns([2, 2, 2])
@@ -157,6 +160,7 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
             self.display_settings_info_no_hits()
 
     def show_hit(self, hits: List[str]) -> None:
+
         selections = self.search_display.get_selections()
         data = self.get_data(
             hits,
@@ -166,6 +170,7 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
             words_after=st.session_state[self.N_WORDS_AFTER],
             lemmatized=not st.session_state[self.LEMMA_WORD_TOGGLE],
         )
+   
 
         if data.empty:
             self.display_settings_info_no_hits()
@@ -199,6 +204,7 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
         words_after: int,
         lemmatized: bool = True,
     ) -> pd.DataFrame:
+        st.write()
         data = _self.api.get_kwic_results_for_search_hits(
             hits,
             from_year=slider[0],
@@ -208,5 +214,5 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
             words_after=words_after,
             lemmatized=lemmatized,
         )
-
+        st.write()
         return data
