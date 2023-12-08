@@ -334,7 +334,7 @@ class ADummyApi:
         search_terms = [x.lower() for x in search_terms if x in self.corpus.vocabulary]
 
         if not search_terms:
-            return pd.DataFrame(), pd.DataFrame()
+            return pd.DataFrame()
 
         trends_data: SweDebTrendsData = SweDebTrendsData(
             corpus=self.corpus, person_codecs=self.person_codecs, n_top=1000000

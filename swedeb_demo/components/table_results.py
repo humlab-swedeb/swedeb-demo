@@ -245,4 +245,4 @@ class TableDisplay:
             return f"{chamber} {year}:{split[5].split('_')[0]}"
         else:
             year_and_number = split[1]
-        return f"{year_and_number} "
+        return f"{year_and_number[0:4]}:{year_and_number[4:]} "

@@ -147,13 +147,17 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
             start_year=start_year,
             end_year=end_year,
         )
-
-        if df.shape[1] > 1:
+        total = 0
+        if len(df.columns) == 1:
+            total = df.sum(axis=0)[0]
+        elif len(df.columns) > 1:
             df["Totalt"] = df.sum(axis=1)
+            total = df["Totalt"].sum(axis=0)
+
         df.reset_index(inplace=True)
         df.rename(columns={"year": "År"}, inplace=True)
         df.set_index(df.columns[0], inplace=True)
-        return df
+        return df, total
 
     @st.cache_data
     def get_anforanden(
@@ -194,29 +198,26 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
                 hit_selector = st.multiselect(
                     label=ct.wt_hit_selector, options=hits, default=hits
                 )
+                data, total = self.get_data(
+                    hit_selector,
+                    slider[0],
+                    slider[1],
+                    selections,
+                )
 
-            data = self.get_data(
-                hit_selector,
-                slider[0],
-                slider[1],
-                selections,
-            )
-
-  
+    
 
             with self.top_result_container:
                 self.draw_line()
                 if data.empty:
                     self.display_settings_info_no_hits()
                 else:
-                    self.draw_result(hit_selector, data)
+                    self.draw_result(hit_selector, data, total)
         else:
             self.display_settings_info_no_hits(self)
 
-    def draw_result(self, selected_hits, data):
-        self.display_settings_info(
-            n_hits=1, hits=f": {', '.join(selected_hits)}" #TODO fix not knowing number of hits
-        )
+    def draw_result(self, selected_hits, data, total):
+        self.display_settings_info(n_hits=total, hits=f": {', '.join(selected_hits)}")
 
         col_display_select, down_a, down_b = st.columns([2, 1, 1])
         with col_display_select:
