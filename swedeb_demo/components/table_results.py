@@ -237,9 +237,12 @@ class TableDisplay:
 
     def translate_protocol(self, protocol_name: str) -> str:
         split = protocol_name.split("-")
-        chamber = split[3]
-        chamber = chamber.replace("ak", "Andra kammaren")
-        chamber = chamber.replace("fk", "Första kammaren")
-        year = split[1]
-        # return  protocol_name.split('_')[0] + ":" + chamber
-        return f"{chamber} {year}:{split[5].split('_')[0]}"
+        if 'fk' in protocol_name or 'ak' in protocol_name:
+            chamber = split[3]
+            chamber = chamber.replace("ak", "Andra kammaren")
+            chamber = chamber.replace("fk", "Första kammaren")
+            year = split[1]
+            return f"{chamber} {year}:{split[5].split('_')[0]}"
+        else:
+            year_and_number = split[1]
+        return f"{year_and_number} "

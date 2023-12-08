@@ -16,15 +16,20 @@ class ExpandedSpeechDisplay:
             and st.session_state["selected_protocol"] is not None
         ):
             selected_protocol = st.session_state["selected_protocol"]
+            if "ak" in selected_protocol or 'fk' in selected_protocol:
+                ch = "kammaren"
 
-            ch = "kammaren"
-            chamber = f"Andra {ch}" if "ak" in selected_protocol else f"Första {ch}"
+                ch = "kammaren"
+                chamber = f"Andra {ch}" if "ak" in selected_protocol else f"Första {ch}"
 
-            simplified_protocol = (
-                selected_protocol.split("-")[1]
-                + ":"
-                + selected_protocol.split("-")[5].split("_")[0]
-            )
+                simplified_protocol =   (
+                    selected_protocol.split("-")[1]
+                    + ":"
+                    + selected_protocol.split("-")[5].split("_")[0]
+                )
+            else:
+                chamber = ""
+                simplified_protocol = selected_protocol.split('-')[1]
             dummy_pdf = "https://www.riksdagen.se/sv/sok/?avd=dokument&doktyp=prot"
             link = f"[{simplified_protocol}]({dummy_pdf})"
             col_1, col_3 = st.columns([3, 1])
@@ -76,3 +81,5 @@ class ExpandedSpeechDisplay:
         st.session_state["selected_protocol"] = None
         for k, v in reset_dict.items():
             st.session_state[k] = v
+    
+  
