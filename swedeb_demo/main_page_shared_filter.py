@@ -48,8 +48,7 @@ def set_swedish_for_selections() -> None:
     st.markdown(multi_css, unsafe_allow_html=True)
 
 
-def add_meta_sidebar(api: ADummyApi) -> Any:
-    sidebar_container = st.sidebar.container()
+def add_meta_sidebar(api: ADummyApi, sidebar_container: Any) -> Any:
 
     with sidebar_container:
         st.header(ct.m_meta_header, help=ct.m_meta_help)
@@ -126,14 +125,17 @@ def add_tabs(meta_search: Any, api: ADummyApi, debug: bool) -> None:
 
 
 def do_render(env_file: str, debug: bool, corpus_dir, corpus_name) -> None:
+    add_banner()
+    set_swedish_for_selections()
+    sidebar_container = st.sidebar.container()
     if API_SESSION_KEY in st.session_state:
         dummy_api = st.session_state[API_SESSION_KEY]
     else:
-        dummy_api = ADummyApi(env_file, corpus_dir, corpus_name)
+   
+        with st.spinner('Laddar data...'):
+            dummy_api = ADummyApi(env_file, corpus_dir, corpus_name)
         st.session_state[API_SESSION_KEY] = dummy_api
-    add_banner()
-    set_swedish_for_selections()
-    meta_search = add_meta_sidebar(dummy_api)
+    meta_search = add_meta_sidebar(dummy_api, sidebar_container)
     add_tabs(meta_search, dummy_api, debug)
 
 
@@ -151,8 +153,8 @@ def do_render(env_file: str, debug: bool, corpus_dir, corpus_name) -> None:
 )
 @click.option(
     "--corpus_name",
-    default="RIKSPROT_V090_TEST",
-    help="Corpus name (eg. RIKSPROT_V090_TEST)",
+    default="RIKSPROT_V0100_TEST",
+    help="Corpus name (eg. RIKSPROT_V0100_TEST)",
 )
 def render_main_page(env_file: str, debug: bool, corpus_dir, corpus_name) -> None:
     do_render(env_file, debug, corpus_dir, corpus_name)
