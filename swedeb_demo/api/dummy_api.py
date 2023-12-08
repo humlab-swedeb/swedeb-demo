@@ -356,14 +356,11 @@ class ADummyApi:
 
         trends_data.transform(opts)
 
-        anforanden = self.get_anforanden_for_word_trends(search_terms, filter_opts)
-
         trends: pd.DataFrame = trends_data.extract(
             indices=trends_data.find_word_indices(opts)
         )
 
         trends = trends[trends["year"].between(start_year, end_year)]
-        anforanden = anforanden[anforanden["År"].between(start_year, end_year)]
         trends["year"] = trends["year"].astype(str)
 
         trends.rename(columns={"who": "person_id"}, inplace=True)
@@ -379,9 +376,9 @@ class ADummyApi:
             unstacked_trends = pu.unstack_data(trends, current_pivot_keys)
         self.translate_dataframe(unstacked_trends)
         unstacked_trends = unstacked_trends.loc[:, (unstacked_trends != 0).any(axis=0)]
-        return unstacked_trends, anforanden
+        return unstacked_trends
 
-    def get_anforanden_for_word_trends(self, search_terms, filter_opts):
+    def get_anforanden_for_word_trends(self, search_terms, filter_opts, start_year, end_year):
         filtered_corpus = self.filter_corpus(filter_opts, self.corpus)
         vectors = self.get_word_vectors(search_terms, filtered_corpus)
         hits = []
@@ -392,6 +389,7 @@ class ADummyApi:
             hits.append(anforanden)
 
         all_hits = pd.concat(hits)
+        all_hits = all_hits[all_hits["År"].between(start_year, end_year)]
 
         return all_hits
 

@@ -6,8 +6,7 @@ import streamlit as st
 
 import swedeb_demo.components.component_texts as ct
 from swedeb_demo.api.dummy_api import ADummyApi  # type: ignore
-from swedeb_demo.components.meta_data_display import \
-    MetaDataDisplay  # type: ignore
+from swedeb_demo.components.meta_data_display import MetaDataDisplay  # type: ignore
 from swedeb_demo.components.speech_display_mixin import ExpandedSpeechDisplay
 from swedeb_demo.components.table_results import TableDisplay
 from swedeb_demo.components.tool_tab import ToolTab
@@ -140,21 +139,37 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
         start_year: int,
         end_year: int,
         selections: dict,
-    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    ) -> pd.DataFrame:
         st.session_state["word_trend_selections"] = selections
-        res = _self.api.get_word_trend_results(
+        df = _self.api.get_word_trend_results(
             search_words,
             filter_opts=selections,
             start_year=start_year,
             end_year=end_year,
         )
 
-        if res[0].shape[1] > 1:
-            res[0]["Totalt"] = res[0].sum(axis=1)
-        res[0].reset_index(inplace=True)
-        res[0].rename(columns={"year": "År"}, inplace=True)
-        res[0].set_index(res[0].columns[0], inplace=True)
-        return res
+        if df.shape[1] > 1:
+            df["Totalt"] = df.sum(axis=1)
+        df.reset_index(inplace=True)
+        df.rename(columns={"year": "År"}, inplace=True)
+        df.set_index(df.columns[0], inplace=True)
+        return df
+
+    @st.cache_data
+    def get_anforanden(
+        _self,
+        search_words: List[str],
+        start_year: int,
+        end_year: int,
+        selections: dict,
+    ) -> pd.DataFrame:
+        return _self.api.get_anforanden_for_word_trends(
+            search_words,
+            filter_opts=selections,
+            start_year=start_year,
+            end_year=end_year,
+        )
+        
 
     def normalize_word_per_year(self, data: pd.DataFrame) -> pd.DataFrame:
         data = data.merge(self.words_per_year, left_index=True, right_index=True)
@@ -162,7 +177,7 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
         data.drop(columns=["n_raw_tokens"], inplace=True)
 
         return data
-    
+
     def get_selected_hits(self):
         if self.SEARCH_BOX in st.session_state:
             return st.session_state[self.SEARCH_BOX]
@@ -173,7 +188,6 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
 
         selections = self.search_display.get_selections()
         hits = self.get_search_terms()
-        
 
         if len(hits) > 0:
             with self.search_container:
@@ -181,25 +195,27 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
                     label=ct.wt_hit_selector, options=hits, default=hits
                 )
 
-            data, kwic_like_data = self.get_data(
+            data = self.get_data(
                 hit_selector,
                 slider[0],
                 slider[1],
                 selections,
             )
 
+  
+
             with self.top_result_container:
                 self.draw_line()
-                if kwic_like_data.empty:
+                if data.empty:
                     self.display_settings_info_no_hits()
                 else:
-                    self.draw_result(hit_selector, data, kwic_like_data)
+                    self.draw_result(hit_selector, data)
         else:
             self.display_settings_info_no_hits(self)
 
-    def draw_result(self, selected_hits, data, kwic_like_data):
+    def draw_result(self, selected_hits, data):
         self.display_settings_info(
-            n_hits=len(kwic_like_data), hits=f": {', '.join(selected_hits)}"
+            n_hits=1, hits=f": {', '.join(selected_hits)}" #TODO fix not knowing number of hits
         )
 
         col_display_select, down_a, down_b = st.columns([2, 1, 1])
@@ -213,6 +229,7 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
                 button_label="Ladda ner ordfrekvenser",
                 index=True,
             )
+        '''    
         with down_b:
             st.write("")
             self.add_download_button(
@@ -220,8 +237,9 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
                 ct.wt_filename_speeches,
                 button_label="Ladda ner anföranden",
             )
+        '''    
         self.draw_line()
-        self.display_results(data, kwic_like_data)
+        self.display_results(data)
 
     def add_radio_buttons(self):
         st.radio(
@@ -258,7 +276,7 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
             data = self.normalize_word_per_year(data)
         return data
 
-    def display_results(self, data: pd.DataFrame, kwic_like_data: pd.DataFrame) -> None:
+    def display_results(self, data: pd.DataFrame) -> None:
         with self.result_container:
             if st.session_state[self.DISPLAY_SELECT] == self.DIAGRAM:
                 data = self.normalize(data, self.NORMAL_DIAGRAM_WT)
@@ -270,6 +288,12 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
                 self.table_display_table.write_table()
 
             else:
+                kwic_like_data = self.get_anforanden(
+                    self.get_search_terms(),
+                    self.search_display.get_slider()[0],
+                    self.search_display.get_slider()[1],
+                    self.search_display.get_selections(),
+                )
                 self.add_anforande_display(kwic_like_data)
 
     def add_anforande_display(self, kwic_like_data):
