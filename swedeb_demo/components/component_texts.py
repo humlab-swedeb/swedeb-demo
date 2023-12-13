@@ -123,7 +123,7 @@ m_title = "Svenska riksdagsdebatter"
 # corpus selectbox
 m_corpus_selectbox = "Välj korpus"
 m_corpus_selectbox_help = "Välj vilket korpus du vill arbeta med."
-m_corpus_selectbox_options = ["Riksdagsanföranden 1920-2021, lemmatiserade"]
+m_corpus_selectbox_options = ["Riksdagsanföranden 1920-2021"]
 
 # meta sidebar settings
 m_meta_header = "Filtrera sökresultat"

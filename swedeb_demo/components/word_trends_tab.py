@@ -33,6 +33,7 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
         self.DATA_KEY_TABLE = f"data_table_{self.TAB_KEY}"
         self.DATA_KEY_SOURCE = f"data_source_{self.TAB_KEY}"
         self.SEARCH_BOX = f"search_box_{self.TAB_KEY}"
+        self.HIT_SELECTOR = f"hit_selector_{self.TAB_KEY}"
         self.words_per_year = self.api.get_words_per_year()
         self.NON_NORMALIZED = "Absolut frekvens"
         self.NORMALIZED = "Normaliserad frekvens"
@@ -100,11 +101,17 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
             self.SEARCH_BOX: self.get_current_search_as_str(),
             self.DISPLAY_SELECT: self.ANFORANDEN,
             self.EXPANDED_SPEECH: False,
+            self.HIT_SELECTOR: self.get_selected_hits(),
         }
 
     def get_current_search_as_str(self) -> str:
         if self.SEARCH_BOX in st.session_state:
             return st.session_state[self.SEARCH_BOX]
+        return ""
+    
+    def get_selected_hits(self):
+        if self.HIT_SELECTOR in st.session_state:
+            return st.session_state[self.HIT_SELECTOR]
         return ""
 
     def handle_button_click(self) -> None:
@@ -182,10 +189,7 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
 
         return data
 
-    def get_selected_hits(self):
-        if self.SEARCH_BOX in st.session_state:
-            return st.session_state[self.SEARCH_BOX]
-        return ""
+ 
 
     def show_display(self) -> None:
         slider = self.search_display.get_slider()
@@ -195,11 +199,15 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
 
         if len(hits) > 0:
             with self.search_container:
-                hit_selector = st.multiselect(
-                    label=ct.wt_hit_selector, options=hits, default=hits
+                defaults = hits
+                if self.HIT_SELECTOR in st.session_state:
+                    defaults = st.session_state[self.HIT_SELECTOR]
+                
+                st.session_state[self.HIT_SELECTOR] = st.multiselect(
+                    label=ct.wt_hit_selector, options=hits, default=defaults
                 )
                 data, total = self.get_data(
-                    hit_selector,
+                    self.get_selected_hits(),
                     slider[0],
                     slider[1],
                     selections,
@@ -212,7 +220,7 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
                 if data.empty:
                     self.display_settings_info_no_hits()
                 else:
-                    self.draw_result(hit_selector, data, total)
+                    self.draw_result(self.get_selected_hits(), data, total)
         else:
             self.display_settings_info_no_hits(self)
 
@@ -290,7 +298,7 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
 
             else:
                 kwic_like_data = self.get_anforanden(
-                    self.get_search_terms(),
+                    st.session_state[self.HIT_SELECTOR],
                     self.search_display.get_slider()[0],
                     self.search_display.get_slider()[1],
                     self.search_display.get_selections(),

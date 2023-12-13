@@ -384,9 +384,9 @@ class ADummyApi:
         unstacked_trends = unstacked_trends.loc[:, (unstacked_trends != 0).any(axis=0)]
         return unstacked_trends
 
-    def get_anforanden_for_word_trends(self, search_terms, filter_opts, start_year, end_year):
+    def get_anforanden_for_word_trends(self, selected_terms, filter_opts, start_year, end_year):
         filtered_corpus = self.filter_corpus(filter_opts, self.corpus)
-        vectors = self.get_word_vectors(search_terms, filtered_corpus)
+        vectors = self.get_word_vectors(selected_terms, filtered_corpus)
         hits = []
         for word, vec in vectors.items():
             hit_di = filtered_corpus.document_index[vec.astype(bool)]
