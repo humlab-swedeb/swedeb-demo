@@ -222,7 +222,7 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
                 else:
                     self.draw_result(self.get_selected_hits(), data, total)
         else:
-            self.display_settings_info_no_hits(self)
+            self.display_settings_info_no_hits()
 
     def draw_result(self, selected_hits, data, total):
         self.display_settings_info(n_hits=total, hits=f": {', '.join(selected_hits)}")

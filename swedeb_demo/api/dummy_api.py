@@ -170,7 +170,7 @@ class ADummyApi:
 
     def get_link(self, person_id, name):
         if name == "":
-            "Okänd"
+            return "Okänd"
         return f"[{name}](https://www.wikidata.org/wiki/{person_id})"
 
     def prepare_anforande_display(

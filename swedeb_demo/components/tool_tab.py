@@ -36,7 +36,9 @@ class ToolTab:
     ) -> None:
         settings = self.search_display.get_current_settings()
         if with_search_hits:
+
             searches = f"{self.get_search_box()}"
+            
             st.info(
                 f"Resultat för sökningen `{searches}` {hits}  \n\n{settings}"
                 f"\n\n**Antal träffar:** {n_hits}"
@@ -50,7 +52,9 @@ class ToolTab:
     def display_settings_info_no_hits(self, with_search_hits: bool = True) -> None:
         settings = self.search_display.get_current_settings()
         searches = f"{self.get_search_box()}"
+
         if with_search_hits:
+
             st.info(
                 f"Inga resultat för sökningen `{searches}`.  "
                 f"\n{settings}  \n Utöka filtreringen eller försök med "
