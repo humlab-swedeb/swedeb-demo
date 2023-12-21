@@ -108,7 +108,7 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
         if self.SEARCH_BOX in st.session_state:
             return st.session_state[self.SEARCH_BOX]
         return ""
-    
+
     def get_selected_hits(self):
         if self.HIT_SELECTOR in st.session_state:
             return st.session_state[self.HIT_SELECTOR]
@@ -180,7 +180,6 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
             start_year=start_year,
             end_year=end_year,
         )
-        
 
     def normalize_word_per_year(self, data: pd.DataFrame) -> pd.DataFrame:
         data = data.merge(self.words_per_year, left_index=True, right_index=True)
@@ -189,17 +188,13 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
 
         return data
 
- 
-
     def show_display(self) -> None:
-
         slider = self.search_display.get_slider()
         selections = self.search_display.get_selections()
         search_terms = self.get_search_terms()
 
         if len(search_terms) > 0:
             with self.search_container:
-
                 st.session_state[self.HIT_SELECTOR] = st.multiselect(
                     label=ct.wt_hit_selector, options=search_terms, default=search_terms
                 )
@@ -209,8 +204,6 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
                     slider[1],
                     selections,
                 )
-
-    
 
             with self.top_result_container:
                 self.draw_line()
@@ -235,7 +228,7 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
                 button_label="Ladda ner ordfrekvenser",
                 index=True,
             )
-        '''    
+        """    
         with down_b:
             st.write("")
             self.add_download_button(
@@ -243,7 +236,7 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
                 ct.wt_filename_speeches,
                 button_label="Ladda ner anföranden",
             )
-        '''    
+        """
         self.draw_line()
         self.display_results(data)
 

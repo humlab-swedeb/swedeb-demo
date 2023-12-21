@@ -11,8 +11,7 @@ from penelope.common.keyness import KeynessMetric  # type: ignore
 from penelope.corpus import VectorizedCorpus  # type: ignore
 from penelope.utility import PropertyValueMaskingOpts  # type: ignore
 
-from swedeb_demo.api.parlaclarin.trends_data import (SweDebComputeOpts,
-                                                     SweDebTrendsData)
+from swedeb_demo.api.parlaclarin.trends_data import SweDebComputeOpts, SweDebTrendsData
 from swedeb_demo.api.westac.riksprot.parlaclarin import codecs as md
 from swedeb_demo.api.westac.riksprot.parlaclarin import speech_text as sr
 
@@ -289,7 +288,7 @@ class ADummyApi:
 
         if len(data) == 0:
             return pd.DataFrame()
-        
+
         renamed_selections = {
             "speech_gender_id": "gender_id",
             "speech_party_id": "party_id",
@@ -297,15 +296,13 @@ class ADummyApi:
         }
 
         data.reset_index(inplace=True)
-  
 
         data.rename(columns=renamed_selections, inplace=True)
-    
-        data = data.astype({"gender_id": int, "party_id": int})
-        data['year'] = data.apply(lambda x: int(x["speech_date"].split('-')[0]), axis=1)
-    
-        data = data[data["year"].between(from_year, to_year)]
 
+        data = data.astype({"gender_id": int, "party_id": int})
+        data["year"] = data.apply(lambda x: int(x["speech_date"].split("-")[0]), axis=1)
+
+        data = data[data["year"].between(from_year, to_year)]
 
         data = self.person_codecs.decode(data, drop=False)
         data["link"] = data.apply(
@@ -370,15 +367,12 @@ class ADummyApi:
 
         trends = trends[trends["year"].between(start_year, end_year)]
 
-
         # add 0s for YEARS without data to avoid false result in plot
         trends = self.add_zeros_for_non_result_years(trends, pivot_keys)
-
 
         trends.rename(columns={"who": "person_id"}, inplace=True)
         trends_data.person_codecs.decode(trends)
         trends["year"] = trends["year"].astype(str)
-
 
         if not pivot_keys:
             unstacked_trends = trends.set_index(opts.temporal_key)
@@ -389,15 +383,14 @@ class ADummyApi:
             ]
             unstacked_trends = pu.unstack_data(trends, current_pivot_keys)
         self.translate_dataframe(unstacked_trends)
-        # remove COLUMNS with only 0s, with serveral filtering options, there 
+        # remove COLUMNS with only 0s, with serveral filtering options, there
         # are sometimes many such columns
         unstacked_trends = unstacked_trends.loc[:, (unstacked_trends != 0).any(axis=0)]
         return unstacked_trends
-    
-    def add_zeros_for_non_result_years(self, original_df, pivot_keys):
 
-        min_year = original_df['year'].min()
-        max_year = original_df['year'].max()
+    def add_zeros_for_non_result_years(self, original_df, pivot_keys):
+        min_year = original_df["year"].min()
+        max_year = original_df["year"].max()
 
         # Generate all combinations of 'Year' and pivot keys
         product = []
@@ -405,7 +398,7 @@ class ADummyApi:
         for pivot_key in pivot_keys:
             all_keys = original_df[pivot_key].unique()
             product.append(all_keys)
-        names  = ['year'] + pivot_keys
+        names = ["year"] + pivot_keys
 
         all_combos = pd.MultiIndex.from_product(product, names=names)
 
@@ -413,10 +406,12 @@ class ADummyApi:
         all_combos_df = pd.DataFrame(index=all_combos).reset_index()
 
         # Merge with the original DataFrame to fill missing combinations
-        merged_df = pd.merge(all_combos_df, original_df, on=['year'] + pivot_keys, how='left')
+        merged_df = pd.merge(
+            all_combos_df, original_df, on=["year"] + pivot_keys, how="left"
+        )
         merged_df.fillna(0, inplace=True)
         # Identify columns of type float
-        float_columns = merged_df.select_dtypes(include=['float']).columns.tolist()
+        float_columns = merged_df.select_dtypes(include=["float"]).columns.tolist()
 
         # Convert float columns to integers
         for col in float_columns:
@@ -424,8 +419,9 @@ class ADummyApi:
 
         return merged_df
 
-
-    def get_anforanden_for_word_trends(self, selected_terms, filter_opts, start_year, end_year):
+    def get_anforanden_for_word_trends(
+        self, selected_terms, filter_opts, start_year, end_year
+    ):
         filtered_corpus = self.filter_corpus(filter_opts, self.corpus)
         vectors = self.get_word_vectors(selected_terms, filtered_corpus)
         hits = []

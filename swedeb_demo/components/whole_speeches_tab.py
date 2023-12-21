@@ -5,8 +5,7 @@ import streamlit as st
 
 from swedeb_demo.api.dummy_api import ADummyApi  # type: ignore
 from swedeb_demo.components import component_texts as ct
-from swedeb_demo.components.meta_data_display import \
-    MetaDataDisplay  # type: ignore
+from swedeb_demo.components.meta_data_display import MetaDataDisplay  # type: ignore
 from swedeb_demo.components.speech_display_mixin import ExpandedSpeechDisplay
 from swedeb_demo.components.table_results import TableDisplay
 from swedeb_demo.components.tool_tab import ToolTab

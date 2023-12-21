@@ -5,8 +5,7 @@ import streamlit as st
 
 import swedeb_demo.components.component_texts as ct
 from swedeb_demo.api.dummy_api import ADummyApi  # type: ignore
-from swedeb_demo.components.meta_data_display import \
-    MetaDataDisplay  # type: ignore
+from swedeb_demo.components.meta_data_display import MetaDataDisplay  # type: ignore
 from swedeb_demo.components.speech_display_mixin import ExpandedSpeechDisplay
 from swedeb_demo.components.table_results import TableDisplay
 from swedeb_demo.components.tool_tab import ToolTab
@@ -87,7 +86,6 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
         }
 
     def handle_button_click(self) -> None:
-        
         if self.get_search_box().strip() == "":
             with self.top_container:
                 st.warning("Fyll i en sökterm")
@@ -95,7 +93,6 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
             st.write()  # hack to stay in kwic tab
         else:
             self.handle_search_click(self.get_st_dict_when_button_clicked())
-
 
     def add_window_size(self) -> None:
         cols_before, cols_after, _ = st.columns([2, 2, 2])
@@ -160,7 +157,6 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
             self.display_settings_info_no_hits()
 
     def show_hit(self, hits: List[str]) -> None:
-
         selections = self.search_display.get_selections()
         data = self.get_data(
             hits,
@@ -170,7 +166,6 @@ class KWICDisplay(ExpandedSpeechDisplay, ToolTab):
             words_after=st.session_state[self.N_WORDS_AFTER],
             lemmatized=not st.session_state[self.LEMMA_WORD_TOGGLE],
         )
-   
 
         if data.empty:
             self.display_settings_info_no_hits()

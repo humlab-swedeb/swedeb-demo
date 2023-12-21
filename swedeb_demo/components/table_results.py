@@ -30,13 +30,12 @@ class TableDisplay:
         self.party_colors = party_abbrev_to_color
         self.expanded_speech_key = expanded_speech_key
 
-    
     def get_next_button_id(self) -> str:
-        if 'button_id' not in st.session_state:
-            st.session_state['button_id'] = 0
+        if "button_id" not in st.session_state:
+            st.session_state["button_id"] = 0
         else:
-            st.session_state['button_id'] += 1
-        return st.session_state['button_id']
+            st.session_state["button_id"] += 1
+        return st.session_state["button_id"]
 
     def write_table(self) -> None:
         if self.data_key in st.session_state:
@@ -237,7 +236,7 @@ class TableDisplay:
 
     def translate_protocol(self, protocol_name: str) -> str:
         split = protocol_name.split("-")
-        if 'fk' in protocol_name or 'ak' in protocol_name:
+        if "fk" in protocol_name or "ak" in protocol_name:
             chamber = split[3]
             chamber = chamber.replace("ak", "Andra kammaren")
             chamber = chamber.replace("fk", "Första kammaren")

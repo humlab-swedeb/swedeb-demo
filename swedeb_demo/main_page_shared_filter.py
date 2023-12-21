@@ -9,15 +9,13 @@ import streamlit as st
 from swedeb_demo.api.dummy_api import ADummyApi  # type: ignore
 from swedeb_demo.components import component_texts as ct
 from swedeb_demo.components.kwic_tab import KWICDisplay  # type: ignore
-from swedeb_demo.components.meta_data_display import \
-    MetaDataDisplay  # type: ignore
-from swedeb_demo.components.whole_speeches_tab import \
-    FullSpeechDisplay  # type: ignore
-from swedeb_demo.components.word_trends_tab import \
-    WordTrendsDisplay  # type: ignore
+from swedeb_demo.components.meta_data_display import MetaDataDisplay  # type: ignore
+from swedeb_demo.components.whole_speeches_tab import FullSpeechDisplay  # type: ignore
+from swedeb_demo.components.word_trends_tab import WordTrendsDisplay  # type: ignore
 
 
 API_SESSION_KEY = "dummy_api"
+
 
 def add_banner() -> None:
     """_summary_: Adds a banner to the top of the page containing the title and a
@@ -49,7 +47,6 @@ def set_swedish_for_selections() -> None:
 
 
 def add_meta_sidebar(api: ADummyApi, sidebar_container: Any) -> Any:
-
     with sidebar_container:
         st.header(ct.m_meta_header, help=ct.m_meta_help)
         side_expander = st.expander(ct.m_meta_expander, expanded=True)
@@ -131,8 +128,7 @@ def do_render(env_file: str, debug: bool, corpus_dir, corpus_name) -> None:
     if API_SESSION_KEY in st.session_state:
         dummy_api = st.session_state[API_SESSION_KEY]
     else:
-   
-        #with st.spinner('Laddar data...'):
+        # with st.spinner('Laddar data...'):
         dummy_api = ADummyApi(env_file, corpus_dir, corpus_name)
         st.session_state[API_SESSION_KEY] = dummy_api
     meta_search = add_meta_sidebar(dummy_api, sidebar_container)
@@ -162,7 +158,7 @@ def render_main_page(env_file: str, debug: bool, corpus_dir, corpus_name) -> Non
 
 if __name__ == "__main__":
     st.set_page_config(
-    page_title="SweDeb DEMO b",
-    layout="wide",
+        page_title="SweDeb DEMO b",
+        layout="wide",
     )
     render_main_page()  # type: ignore

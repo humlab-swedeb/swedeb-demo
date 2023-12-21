@@ -4,8 +4,7 @@ import pandas as pd
 import streamlit as st
 
 from swedeb_demo.api.dummy_api import ADummyApi  # type: ignore
-from swedeb_demo.components.meta_data_display import \
-    MetaDataDisplay  # type: ignore
+from swedeb_demo.components.meta_data_display import MetaDataDisplay  # type: ignore
 
 
 class ToolTab:
@@ -36,9 +35,8 @@ class ToolTab:
     ) -> None:
         settings = self.search_display.get_current_settings()
         if with_search_hits:
-
             searches = f"{self.get_search_box()}"
-            
+
             st.info(
                 f"Resultat för sökningen `{searches}` {hits}  \n\n{settings}"
                 f"\n\n**Antal träffar:** {n_hits}"
@@ -54,7 +52,6 @@ class ToolTab:
         searches = f"{self.get_search_box()}"
 
         if with_search_hits:
-
             st.info(
                 f"Inga resultat för sökningen `{searches}`.  "
                 f"\n{settings}  \n Utöka filtreringen eller försök med "
