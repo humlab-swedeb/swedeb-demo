@@ -192,19 +192,16 @@ class WordTrendsDisplay(ExpandedSpeechDisplay, ToolTab):
  
 
     def show_display(self) -> None:
+
         slider = self.search_display.get_slider()
-
         selections = self.search_display.get_selections()
-        hits = self.get_search_terms()
+        search_terms = self.get_search_terms()
 
-        if len(hits) > 0:
+        if len(search_terms) > 0:
             with self.search_container:
-                defaults = hits
-                if self.HIT_SELECTOR in st.session_state:
-                    defaults = st.session_state[self.HIT_SELECTOR]
-                
+
                 st.session_state[self.HIT_SELECTOR] = st.multiselect(
-                    label=ct.wt_hit_selector, options=hits, default=defaults
+                    label=ct.wt_hit_selector, options=search_terms, default=search_terms
                 )
                 data, total = self.get_data(
                     self.get_selected_hits(),
